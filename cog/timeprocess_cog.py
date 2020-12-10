@@ -93,6 +93,7 @@ class Time(commands.Cog):
       await self.idol_time_out(channel)
    
    async def idol_time_out(self, channel):
+      await channel.send("今日のアイドルでした")
       with (sqlite3.connect("db/bot_data.db")) as conn:
          c = conn.cursor()
          c.execute(f'select *from idol_data where name="{self.idol_command}"')
@@ -274,7 +275,8 @@ class Time(commands.Cog):
       elif nowtime.hour == 23 and nowtime.minute == 59:
          Time.wait_seconds = 60.0- float(nowtime.second)
          channel = self.bot.get_channel(744610643927236750)
-         await self.idol_time_out(channel)
+         if self.idol_command!="noncommand_commands":
+            await self.idol_time_out(channel)
          
 
     
