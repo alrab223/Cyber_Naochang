@@ -65,7 +65,7 @@ class Time(commands.Cog):
             with open("text/idol.txt", "w") as f:
                f.write(idol[0])
             num = random.randint(1, 5)
-            await channel.send("今日のアイドル")
+            await channel.send("今日のアイドルは誰")
             if num==1:
                await channel.send(f"誕生日が{idol[1]}、趣味が「{idol[7]}」のアイドルは...")
             elif num == 2:
@@ -90,7 +90,7 @@ class Time(commands.Cog):
    @commands.command("てすとず")
    async def test_idol(self, ctx):
       channel = self.bot.get_channel(744610643927236750)
-      await self.idol_time_out(channel)
+      await self.daily_idol(channel)
    
    async def idol_print(self, channel):
       with (sqlite3.connect("db/bot_data.db")) as conn:
@@ -248,10 +248,10 @@ class Time(commands.Cog):
 
       elif nowtime.hour == 23 and nowtime.minute == 59:
          Time.wait_seconds = 60.0- float(nowtime.second)
-         channel = self.bot.get_channel(744610643927236750)
-         if self.idol_command != "noncommand_commands":
-            await channel.send("今日のアイドルはこの人でした！")
-            await self.idol_print(channel)
+         # channel = self.bot.get_channel(744610643927236750)
+         # if self.idol_command != "noncommand_commands":
+         #    await channel.send("今日のアイドルはこの人でした！")
+         #    await self.idol_print(channel)
          
 
     
