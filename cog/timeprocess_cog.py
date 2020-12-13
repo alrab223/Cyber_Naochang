@@ -124,8 +124,12 @@ class Time(commands.Cog):
       if ctx.channel.id != 744610643927236750:
          return
       if name == self.idol_command:
-         await channel.send("正解！")
+         await channel.send("正解！まゆげコインゲット！")
          self.idol_print(channel)
+         with (sqlite3.connect("db/bot_data.db")) as conn:
+            c = conn.cursor()
+            c.execute(f'update userdata set mayuge_coin=mayuge_coin+10 where id={ctx.author.id}')
+            conn.commit()
       elif self.idol_command == "noncommand_commands":
          pass
       else:
