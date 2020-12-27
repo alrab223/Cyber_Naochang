@@ -19,6 +19,7 @@ from googletrans import Translator
 from pykakasi import kakasi
 from src import colla,wiki_search
 from src import picture_download as pd
+from src.DbModule import DbModule as db
 load_dotenv()
 # コグとして用いるクラスを定義。
 class Main(commands.Cog):
@@ -27,6 +28,7 @@ class Main(commands.Cog):
    def __init__(self, bot):
       self.bot = bot
       self.tweet_wait = False
+      self.db = db()
       with open("json/picture.json", "r") as f:
          self.colla_num=json.load(f) 
       
@@ -68,18 +70,25 @@ class Main(commands.Cog):
             await member.edit(nick=name)
             break
    
+   @commands.command("データ移行")
+   async def sql_changer(self, ctx):
+      with (sqlite3.connect("db/bot_data.db")) as conn:
+         c = conn.cursor()
+      c.execute(f'select * from vc_notification_setting')
+      datas = c.fetchall()
+      
+      for data in datas:
+         self.db.insert("vc_notification",["id","members","reset","cokumn","vc_notification"],list(data))
+      print("完了")
+
    @commands.command("参加日取得")
    async def member_join(self, ctx):
       guild=self.bot.get_guild(566227588054253569)
       members = guild.members
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         for member in members:
+      for member in members:
+         if self.db.select(f"select* from user_join where id={member.id}")!=None:
             times = member.joined_at + datetime.timedelta(hours=9)
-            data=[member.id,times.year,times.month,times.day]
-            c.execute(f'insert into user_join (id,year,month,day) values (?,?,?,?)',data)
-         conn.commit()
-   
+            self.db.allinsert("user_join",[member.id,times.year,times.month,times.day])
    
    @commands.command("教えて奈緒")
    async def wiki(self, ctx, word: str):
@@ -89,40 +98,19 @@ class Main(commands.Cog):
    @commands.command()
    async def gold(self, ctx):
       """所持まゆげを調べます"""
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-      c.execute(f'select gold from userdata where id={ctx.author.id}')
-      gold = c.fetchall()[0][0]
-      await ctx.send(f"{gold}まゆげ")
-   
-   @commands.command("データ登録n")
-   async def regist(self, ctx):
-      with open("db/bot_id.json", "r") as f:
-         dic = json.load(f)
+      gold=self.db.select(f'select gold from user_data where id={ctx.author.id}')
+      await ctx.send(f"{gold[0]['gold']}まゆげ")
 
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         for i in dic:
-            coin=dic[str(i)]["24_hours"]
-            c.execute(f'update userdata set mayuge_coin={coin} where id={i}')
-         conn.commit()
- 
-   
    @commands.command("vc通知")
    @commands.dm_only()
    async def vc_news(self, ctx,num:str):
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         if num == "オフ":
-            c.execute(f'update userdata set vc_notification=0 where id={ctx.author.id}')
-            await ctx.send(ctx.author.mention+"通知を解除しました")
-         else:
-            c.execute(f'update vc_notification_setting set members={num},vc_notification=1 where id={ctx.author.id}')
-            await ctx.send(f"参加人数{num}以上で通知します")
-         conn.commit()
-      
-      
-          
+      if num == "オフ":
+         self.db.update(f'update vc_notification set vc_notification=0 where id={ctx.author.id}')
+         await ctx.send(ctx.author.mention+"通知を解除しました")
+      else:
+         self.db.update(f'update vc_notification set members={num},vc_notification=1 where id={ctx.author.id}')
+         await ctx.send(f"参加人数{num}以上で通知します")
+    
    @commands.command()
    async def rainbow(self, ctx):
        await ctx.message.delete()
@@ -167,26 +155,6 @@ class Main(commands.Cog):
               username=ctx.author.display_name,
               avatar_url=ctx.author.avatar_url_as(format="png"))
    
-            
-   @commands.command("送金")
-   async def send_money(self, ctx, user_id: int, money: int):
-      """まゆげを誰かに送金できます.引数(ユーザーid,金額)"""
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         sql = c.execute(f'select gold from userdata where id={ctx.author.id} or id={user_id}')
-         gold=[]
-         for row in sql:
-            gold.append(row[0])
-         if gold[0]<money:
-            await ctx.send("まゆげが足りません")
-            return
-         else:
-            gold[0]-=money
-            gold[1] += money
-            conn.commit()
-      me=self.bot.get_user(user_id)
-      await ctx.send(me.mention+f"に{money}まゆげ送金しました")
-
    @commands.Cog.listener()
    async def on_member_join(self,member):
       dm_channel = await member.create_dm()
@@ -194,26 +162,18 @@ class Main(commands.Cog):
           text = f.read()
       await dm_channel.send(member.mention)
       await dm_channel.send(text)
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         data=[member.id,10000,None,0,0,10]
-         c.execute(f'insert into userdata (id, gold, birthday,naosuki,vc_notification,mayuge_coin) values (?,?,?,?,?,?)',data)
-         conn.commit()
+      self.db.insert("user_data",["id","gold","birthday,naosuki","vc_notification","mayuge_coin"],[member.id,10000,None,0,0,10])
+
    @commands.command()#メンバー登録
    async def member(self, ctx):
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         
-         guild=self.bot.get_guild(658856326541213708)
-         for member in guild.members:
-            if member.bot or c.execute(f"select* from userdata where id={member.id}")!=None:
-               pass
-            else:
-               data=[member.id,10000,None,0,0,10]
-               c.execute(f'insert into userdata (id, gold, birthday,naosuki,vc_notification,mayuge_coin) values (?,?,?,?,?,?)',data)
-               conn.commit()
+      guild=self.bot.get_guild(658856326541213708)
+      for member in guild.members:
+         if member.bot or self.db.select(f"select* from userdata where id={member.id}")!=None:
+            pass
+         else:
+            self.db.insert("user_data",["id","gold","birthday,naosuki","vc_notification","mayuge_coin"],[member.id,10000,None,0,0,10])
    
-   @commands.command()#メンバー登録
+   @commands.command()
    async def check(self, ctx):
        emoji = await ctx.guild.fetch_emojis()
        for i in emoji:

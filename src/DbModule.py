@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 class DbModule:
     def __init__(self):
         base_path = os.path.dirname(os.path.abspath(__file__))
-        dotenv_path = os.path.join(base_path, 'src/.env')
+        dotenv_path = os.path.join(base_path, '.env')
         load_dotenv(dotenv_path)
 
     def __db_connect(self):
@@ -25,20 +25,23 @@ class DbModule:
             parameters = ', '.join(str('\'' + str(parameter) + '\'') for parameter in values)
         )
 
-    def insert(self, table: str, values: dict):
+    
+    def insert(self, table: str, columns: list, values: list):
         cnx = self.__db_connect()
         cur = cnx.cursor()
-
-        columns = list(values.keys())
-        parameters = list(values.values())
-
-
-        sql = "INSERT INTO `{table}` ({columns}) VALUES ({values})".format(
-            table = table,
-            columns = ', '.join(columns),
-            values =  ', '.join(str('\'' + str(parameter) + '\'') for parameter in parameters)
-        )
-
+        parameters=[]
+        for parameter in values:
+            if isinstance(parameter, str):
+                parameters.append(str('\'' + parameter + '\''))
+            else:
+                if parameter==None:
+                    parameters.append("NULL")
+                else:
+                    parameters.append(str(parameter))
+        new_columns=[f"%({x})s" for x in columns]
+        new_columns=", ".join(columns)
+        parameters=", ".join(parameters)
+        sql=f"INSERT INTO {table} ({new_columns}) VALUES ({parameters})"
         try:
             cur.execute(sql)
             cnx.commit()
@@ -46,20 +49,24 @@ class DbModule:
         except:
             cnx.rollback()
             raise
+        
+        
 
-    def multiple_insert(self, table: str, columns: list, values: list):
+
+    def allinsert(self, table: str,values: list):
         cnx = self.__db_connect()
         cur = cnx.cursor()
-        parameters = []
-        for value in values:
-            parameters.append(self.__get_value(value))
-
-        sql = "INSERT INTO `{table}` ({columns}) VALUES {values}".format(
-            table = table,
-            columns = ', '.join(columns),
-            values =  ', '.join(parameters)
-        )
-
+        parameters=[]
+        for parameter in values:
+            if isinstance(parameter, str):
+                parameters.append(str('\'' + parameter + '\''))
+            else:
+                if parameter==None:
+                    parameters.append("NULL")
+                else:
+                    parameters.append(str(parameter))
+        parameters=", ".join(parameters)
+        sql=f"INSERT INTO {table} VALUES ({parameters})"
         try:
             cur.execute(sql)
             cnx.commit()

@@ -11,6 +11,7 @@ import glob
 import os
 from dotenv import load_dotenv
 import sqlite3
+from src.DbModule import DbModule as db
 load_dotenv()
 # コグとして用いるクラスを定義。
 class Game(commands.Cog):
@@ -21,6 +22,7 @@ class Game(commands.Cog):
         self.handbattle = False
         self.slot = False
         self.chance=False
+        self.db=db()
    
    def get_emoji(self):
       with open("json/emoji.json", "r")as f:
@@ -99,6 +101,7 @@ class Game(commands.Cog):
       if self.slot == True:
          return False
       self.slot = True
+      # flag_list=self.db.select(f'select naosuki,mayuge_coin from userdata where id={ctx.author.id}')[0]
       with (sqlite3.connect("db/bot_data.db")) as conn:
          c = conn.cursor()
          c.execute(f'select naosuki,mayuge_coin from userdata where id={ctx.author.id}')

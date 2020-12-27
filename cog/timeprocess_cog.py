@@ -2,41 +2,39 @@ from discord.ext import commands,tasks  # Bot Commands Frameworkのインポー�
 import datetime
 import json
 import os
-import discord
-import subprocess
-import shutil
 import csv
+import asyncio
+
+import discord
 import random
 import glob
 import sqlite3
 import urllib3
 from bs4 import BeautifulSoup
+
+from src.DbModule import DbModule as db
 # コグとして用いるクラスを定義。
 class Time(commands.Cog):
 
-   wait_seconds = 60.0   
    def __init__(self, bot):
-       self.bot = bot
-       self.birthday_sned = False
-       self.preurl = []
-       self.flag=1
-       self.printer.start()
-       self.bd_printer2.start()
-       self.weather_list = []
-       with open("text/idol.txt", "r") as f:
-          self.idol_command=f.read().replace("\n","")
+      self.bot = bot
+      self.birthday_sned = False
+      self.flag=1
+      self.printer.start()
+      self.bd_printer2.start()
+      self.weather_list = []
+      self.db = db()
+      with open("text/idol.txt", "r") as f:
+         self.idol_command=f.read().replace("\n","")
        
        
    
    def daily_reset(self):
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         sql = c.execute(f'select id from userdata where vc_notification=0')
-         id_list = [x[0] for x in sql]
-         for i in id_list:
-            c.execute(f'update userdata set mayuge_coin=mayuge_coin+3,naosuki=0 where id={i}')
-         conn.commit()
-   
+      
+      row=self.db.select(f'select id from user_data')
+      for i in row:
+         self.db.update(f'update user_data set mayuge_coin=mayuge_coin+3,naosuki=0 where id={i["id"]}')
+
    def weather_get(self):
       self.weather_list=[]
       tokyo = 'https://weather.yahoo.co.jp/weather/jp/13/4410.html'
@@ -57,62 +55,51 @@ class Time(commands.Cog):
          self.weather_list.append(f"{name[i]}の天気:{text}")
    
    async def daily_idol(self,channel):
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-            c = conn.cursor()
-            c.execute(f'select *from idol_data where done!=1')
-            idol = c.fetchall()
-            idol=random.choice(idol)
-            with open("text/idol.txt", "w") as f:
-               f.write(idol[0])
-            num = random.randint(1, 5)
-            await channel.send("今日のアイドルは誰")
-            if num==1:
-               await channel.send(f"誕生日が{idol[1]}、趣味が「{idol[7]}」のアイドルは...")
-            elif num == 2:
-               await channel.send(f"誕生日が{idol[1]}、属性{idol[2]}、{idol[5]}出身のアイドルは...")
-            elif num == 3:
-               await channel.send(f"誕生日が{idol[1]}、{idol[3]}歳、{idol[5]}出身のアイドルは...")
-            elif num == 4:
-               await channel.send(f"誕生日が{idol[1]}、{idol[4]}型、{idol[5]}出身のアイドルは...")
-            else:
-               await channel.send(f"趣味が「{idol[7]}」のアイドルは...")
-            await channel.send(f"```!今日のアイドル アイドル名```")
-            
-            conn.commit()
-            self.idol_command=idol[0]
-         
-         
+      idol=self.db.select(f'select *from idol_data where done!=1')
+      idol=random.choice(idol)
+      with open("text/idol.txt", "w") as f:
+         f.write(idol['name'])
+      num = random.randint(1, 5)
+      await channel.send("今日のアイドルは誰")
+      if num==1:
+         await channel.send(f"誕生日が{idol['birthday']}、趣味が「{idol['hobby']}」のアイドルは...")
+      elif num == 2:
+         await channel.send(f"誕生日が{idol['birthday']}、属性{idol['element']}、{idol['birthplace']}出身のアイドルは...")
+      elif num == 3:
+         await channel.send(f"誕生日が{idol['birthday']}、{idol['age']}歳、{idol['birthplace']}出身のアイドルは...")
+      elif num == 4:
+         await channel.send(f"誕生日が{idol['birthday']}、{idol['blood_type']}型、{idol['birthplace']}出身のアイドルは...")
+      else:
+         await channel.send(f"趣味が「{idol['hobby']}」のアイドルは...")
+      await channel.send(f"```!今日のアイドル アイドル名```")
       
+      self.idol_command=idol['name']
+         
    @commands.command("天気取得")
    async def test_reset(self, ctx):
       self.weather_get()
    
    @commands.command("てすとず")
    async def test_idol(self, ctx):
-      channel = self.bot.get_channel(744610643927236750)
-      await self.daily_idol(channel)
+      await self.daily_reset()
    
    async def idol_print(self, channel):
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         c.execute(f'select *from idol_data where name="{self.idol_command}"')
-         idol = c.fetchall()[0]
-         tall=idol[10]
-         embed = discord.Embed(title=f"{idol[0]}")
-         files = discord.File(f"picture/daily_idol/{self.idol_command}.png", filename="image.png")
-         embed.set_image(url="attachment://image.png")
-         embed.add_field(name="属性", value=f"{idol[2]}",inline=False)
-         embed.add_field(name="年齢", value=f"{idol[3]}")
-         embed.add_field(name="身長", value=f"{tall}cm")
-         embed.add_field(name="誕生日", value=f"{idol[1]}")
-         embed.add_field(name="出身地", value=f"{idol[5]}")
-         embed.add_field(name="血液型", value=f"{idol[4]}")
-         embed.add_field(name="利き手", value=f"{idol[6]}")
-         embed.add_field(name="趣味", value=f"{idol[7]}")
-         embed.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
-         await channel.send(file=files, embed=embed)
-         c.execute(f'update idol_data set done=1 where name="{idol[0]}"')
-         conn.commit()
+      idol=self.db.select(f'select *from idol_data where name="{self.idol_command}"')[0]
+      tall=idol['height']
+      embed = discord.Embed(title=f"{idol['name']}")
+      files = discord.File(f"picture/daily_idol/{self.idol_command}.png", filename="image.png")
+      embed.set_image(url="attachment://image.png")
+      embed.add_field(name="属性", value=f"{idol['element']}",inline=False)
+      embed.add_field(name="年齢", value=f"{idol['age']}")
+      embed.add_field(name="身長", value=f"{tall}cm")
+      embed.add_field(name="誕生日", value=f"{idol['birthday']}")
+      embed.add_field(name="出身地", value=f"{idol['birthplace']}")
+      embed.add_field(name="血液型", value=f"{idol['blood_type']}")
+      embed.add_field(name="利き手", value=f"{idol['hand']}")
+      embed.add_field(name="趣味", value=f"{idol['hobby']}")
+      embed.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
+      await channel.send(file=files, embed=embed)
+      self.db.update(f'update idol_data set done=1 where name="{idol["name"]}"')
       with open("text/idol.txt", "w") as f:
          f.write("noncommand_commands")
       self.idol_command = "noncommand_commands"
@@ -120,16 +107,10 @@ class Time(commands.Cog):
 
    @commands.command("今日のアイドル")
    async def today_idol(self, ctx, name: str):
-      channel = self.bot.get_channel(744610643927236750)
-      if ctx.channel.id != 744610643927236750:
-         return
       if name == self.idol_command:
-         await channel.send("正解！まゆげコインゲット！")
-         await self.idol_print(channel)
-         with (sqlite3.connect("db/bot_data.db")) as conn:
-            c = conn.cursor()
-            c.execute(f'update userdata set mayuge_coin=mayuge_coin+10 where id={ctx.author.id}')
-            conn.commit()
+         await ctx.send("正解！まゆげコインゲット！")
+         await self.idol_print(ctx.channel)
+         self.db.update(f'update user_data set mayuge_coin=mayuge_coin+10 where id={ctx.author.id}')
       elif self.idol_command == "noncommand_commands":
          pass
       else:
@@ -228,11 +209,11 @@ class Time(commands.Cog):
       await self.bot.wait_until_ready()
    
    
-   @tasks.loop(seconds=wait_seconds)
+   @tasks.loop(seconds=60.0)
    async def printer(self):
-    
       nowtime = datetime.datetime.now()
-      if nowtime.hour == 0 and nowtime.minute == 0 :
+      if nowtime.hour == 23 and nowtime.minute == 59:
+         await asyncio.sleep(60-nowtime.second)
          self.daily_reset()
          self.weather_get()
          channel = self.bot.get_channel(744610643927236750)
@@ -249,13 +230,7 @@ class Time(commands.Cog):
          await channel.send(emoji)
          Time.wait_seconds = 60.0
          await self.daily_idol(channel)
-
-      elif nowtime.hour == 23 and nowtime.minute == 59:
-         Time.wait_seconds = 60.0- float(nowtime.second)
-         # channel = self.bot.get_channel(744610643927236750)
-         # if self.idol_command != "noncommand_commands":
-         #    await channel.send("今日のアイドルはこの人でした！")
-         #    await self.idol_print(channel)
+  
          
 
     
