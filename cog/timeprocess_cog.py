@@ -23,6 +23,7 @@ class Time(commands.Cog):
       self.printer.start()
       self.bd_printer2.start()
       self.weather_list = []
+      self.event=False #特殊イベントの時のみTrue
       self.db = db()
       with open("text/idol.txt", "r") as f:
          self.idol_command=f.read().replace("\n","")
@@ -61,6 +62,8 @@ class Time(commands.Cog):
          f.write(idol['name'])
       num = random.randint(1, 5)
       await channel.send("今日のアイドルは誰")
+      if idol['name']=="神谷奈緒":
+         await channel.send(f"誕生日が{idol['birthday']}、千葉が産んだ\nまゆげ！もふもふ！のアイドルは...")
       if num==1:
          await channel.send(f"誕生日が{idol['birthday']}、趣味が「{idol['hobby']}」のアイドルは...")
       elif num == 2:
@@ -79,9 +82,11 @@ class Time(commands.Cog):
    async def test_reset(self, ctx):
       self.weather_get()
    
-   @commands.command("てすとず")
-   async def test_idol(self, ctx):
-      await self.daily_reset()
+   @commands.command()
+   async def test8(self, ctx):
+      web=await ctx.channel.webhooks()
+      webhook = discord.utils.get(web, name="naochangs")
+      print(webhook)
    
    async def idol_print(self, channel):
       idol=self.db.select(f'select *from idol_data where name="{self.idol_command}"')[0]
@@ -104,7 +109,6 @@ class Time(commands.Cog):
          f.write("noncommand_commands")
       self.idol_command = "noncommand_commands"
    
-
    @commands.command("今日のアイドル")
    async def today_idol(self, ctx, name: str):
       if name == self.idol_command:
@@ -116,7 +120,7 @@ class Time(commands.Cog):
       else:
          await channel.send("残念！")
   
-   @commands.command("")
+   @commands.command()
    async def start3(self, ctx):
       self.printer3.start()
          
@@ -180,29 +184,6 @@ class Time(commands.Cog):
          writer = csv.writer(f)
          writer.writerows(l)
    
-   @tasks.loop(seconds=6.0)
-   async def printer4(self):
-    
-      channel = self.bot.get_channel(778607627667898398)
-      print("開始")
-      with (sqlite3.connect("src/tweet.db")) as conn:
-         c = conn.cursor()
-         c.execute(f'select count(*) from tweet')
-         count_record:int = c.fetchall()[0][0]
-         for _ in range(3):
-            if count_record > 0:
-               c.execute(f'select name,text,icon from tweet')
-               l = c.fetchall()
-               ch_webhooks = await channel.webhooks()
-               webhook = discord.utils.get(ch_webhooks, name="naochang")
-               try :
-                  await webhook.send(content=l[1][0],
-                        username=l[0][0],
-                        avatar_url=l[2][0])
-               except discord.errors.HTTPException:
-                  pass
-            c.execute("delete from tweet where num=(select min(num) from tweet)")
-
    @bd_printer2.before_loop
    async def before_printer(self):
       print('waiting...')
@@ -214,6 +195,8 @@ class Time(commands.Cog):
       nowtime = datetime.datetime.now()
       if nowtime.hour == 23 and nowtime.minute == 59:
          await asyncio.sleep(60-nowtime.second)
+         if self.event==True:
+            await self.special_daily()
          self.daily_reset()
          self.weather_get()
          channel = self.bot.get_channel(744610643927236750)
@@ -228,12 +211,39 @@ class Time(commands.Cog):
          for i in dic["rainbow_art"]:
             emoji += str(self.bot.get_emoji(int(i)))
          await channel.send(emoji)
-         Time.wait_seconds = 60.0
          await self.daily_idol(channel)
-  
-         
+      else:
+         messages=self.db.select(f"select * from future_send")
+         for message in messages:
+            if message['time'] == f"{nowtime.year}/{nowtime.month}/{nowtime.day}-{nowtime.hour}:{str(nowtime.minute).zfill(2)}":
+               user=await self.bot.fetch_user(message['id'])
+               channel = self.bot.get_channel(message['channel_id'])
+               ch_webhooks = await channel.webhooks()
+               webhook = discord.utils.get(ch_webhooks, name="naochang")
+               if webhook==None:
+                  await channel.create_webhook(name="naochang")
+                  ch_webhooks = await channel.webhooks()
+                  webhook = discord.utils.get(ch_webhooks, name="naochang")
+               await webhook.send(content=message['text'],
+                        username=user.name,
+                        avatar_url=user.avatar_url_as(format="png"))
+               self.db.update(f"delete from future_send where time='{message['time']}' and id={message['id']}")
+      
+   async def special_daily(self):
+      self.daily_reset()
+      self.weather_get()
+      channel = self.bot.get_channel(744610643927236750)
+      await channel.send("Happy New Year")
+      with open("json/emoji.json", "r")as f:
+         dic=json.load(f)
+      for i in dic["rainbow_art"]:
+         emoji += str(self.bot.get_emoji(int(i)))
+      await channel.send(emoji)
+      await channel.send("2021")
+      await channel.send(emoji)
 
-    
+
+  
 # Bot本体側からコグを読み込む際に呼び出される関数。
 def setup(bot):
     bot.add_cog(Time(bot)) # TestCogにBotを渡してインスタンス化し、Botにコグとして登録する。

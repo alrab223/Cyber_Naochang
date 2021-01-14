@@ -10,7 +10,6 @@ import asyncio
 import glob
 import os
 from dotenv import load_dotenv
-import sqlite3
 from src.DbModule import DbModule as db
 load_dotenv()
 # コグとして用いるクラスを定義。
@@ -95,47 +94,50 @@ class Game(commands.Cog):
          await asyncio.sleep(3)
          return gif, msg
    
-   async def slot_flag(self, ctx,slot):
+   async def slot_flag(self, ctx,slot:str):
       if ctx.channel.id != int(os.environ.get("naosuki_ch")):
          return False
       if self.slot == True:
          return False
       self.slot = True
-      # flag_list=self.db.select(f'select naosuki,mayuge_coin from userdata where id={ctx.author.id}')[0]
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         c.execute(f'select naosuki,mayuge_coin from userdata where id={ctx.author.id}')
-         flag_list = c.fetchone()
+      flag_list=self.db.select(f'select naosuki,mayuge_coin from user_data where id={ctx.author.id}')[0]
          
       if slot=="naosuki":
-         if flag_list[0]==1:
+         if flag_list['naosuki']==1:
             await ctx.send(f"{ctx.author.mention}なおすきスロット,スーパーなおすきスロットは1日一回までだよ！")
             return False
          else:
-            c.execute(f'update userdata set naosuki=1 where id={ctx.author.id}')
-            conn.commit()
+            self.db.update(f'update user_data set naosuki=1 where id={ctx.author.id}')
       elif slot == "24_hours":
-         if flag_list[1] == 0:
+         if flag_list['mayuge_coin'] == 0:
             await ctx.send(f"{ctx.author.mention}まゆげコインが足りません")
             return False
          else:
-            c.execute(f'update userdata set mayuge_coin=mayuge_coin-1 where id={ctx.author.id}')
-            conn.commit()
-            return flag_list[1]-1
+            self.db.update(f'update user_data set mayuge_coin=mayuge_coin-1 where id={ctx.author.id}')
+            return flag_list['mayuge_coin']-1
       else:
-         if flag_list[1] <5:
+         if flag_list['mayuge_coin'] <5:
             await ctx.send(f"{ctx.author.mention}連続チャレンジは5つコインが必要です")
             return False
          else:
-            c.execute(f'update userdata set mayuge_coin=mayuge_coin-5 where id={ctx.author.id}')
-            conn.commit()
+            self.db.update(f'update user_data set mayuge_coin=mayuge_coin-5 where id={ctx.author.id}')
 
-            return flag_list[1] - 5
+            return flag_list['mayuge_coin'] - 5
          
-
       return True
    
-      
+   @commands.command()
+   async def test7(self, ctx):
+      msg=await ctx.send("なおすき")
+      await asyncio.sleep(2)
+      await msg.edit(content="な")
+      await asyncio.sleep(2)
+      await msg.edit(content="お")
+      await asyncio.sleep(2)
+      await msg.edit(content="す")
+      await asyncio.sleep(2)
+      await msg.edit(content="き")
+
    @commands.command("なおすきスロット")
    async def naosuki_slot(self, ctx):
       """スロットで遊びます"""
@@ -313,7 +315,49 @@ class Game(commands.Cog):
       await gif.delete()
       await log.delete()
       self.slot = False
-      
+   
+   @commands.command("最後のチャレンジ")
+   async def final_challenge(self, ctx):
+      coin=self.db.select(f'select mayuge_coin from user_data where id={ctx.author.id}')[0]
+
+      if coin >1:
+         self.slot = False
+         return
+      self.db.update(f"update user_data set mayuge_coin=0 where id={ctx.author.id}")
+      log=await ctx.send(f"{ctx.author.mention}全てのコインをばら撒いた！")
+      with open("json/emoji.json", "r") as f:
+         emdic = json.load(f)
+      emoji=""
+      judge=[]
+      ei=emdic["kamiyanao"]
+      path = "picture/gif2/*.gif"
+      num = glob.glob(path)
+      gif,msg=await self.slot_maker(ctx,num,"kamiyanao_slot",5)
+      emoji = ""
+      for i in range(5):
+         ran=random.choice(ei)
+         judge.append(ran)
+         emoji += str(self.bot.get_emoji(ran))
+         await asyncio.sleep(0.1)
+         await msg.edit(content=emoji)
+      answer = await self.bonus_slot(ctx, ei, judge, msg)
+      if answer != False and answer!=True:
+         msg=answer
+      if ei == judge or answer!=False:
+         emoji = emdic["nao_gif"]
+         emoji+= emdic["kamiyanao"]
+         emoji += emdic["naosuki"]
+         for i in emoji:
+            ej = str(self.bot.get_emoji(i))
+            try:
+               await msg.add_reaction(ej)
+            except AttributeError:
+               pass
+         await ctx.send(f"{ctx.author.mention}チャレンジ成功！！")
+      await gif.delete()
+      await log.delete()
+      self.slot = False
+
 
    @commands.command("連続神谷奈緒チャレンジ")
    async def con_hours24_slot(self, ctx):

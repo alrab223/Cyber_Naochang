@@ -13,6 +13,7 @@ from contextlib import closing
 import discord
 import MeCab
 import requests
+import emoji
 from dotenv import load_dotenv
 from discord.ext import commands  # Bot Commands Frameworkのインポート
 from googletrans import Translator
@@ -32,25 +33,11 @@ class Main(commands.Cog):
       with open("json/picture.json", "r") as f:
          self.colla_num=json.load(f) 
       
-
    @commands.command("goodbye")
    async def disconnect(self, ctx):
       """botを切ります"""
       await ctx.send("また会いましょう")
       await self.bot.logout()
-
-   @commands.command()
-   async def birthday(self, ctx, idol: str):
-      """アイドル名を入れると誕生日を出力します"""
-      with open("text/birthday.txt","r")as f:
-           target=f.readline()
-           while target:
-               if idol in target:
-                   answer=target.split(" - ")
-                   break
-               else:
-                   target=f.readline()
-           await ctx.send(answer[0])
   
    @commands.command("ナオビーム")
    async def logs(self, ctx,num:int):
@@ -133,6 +120,24 @@ class Main(commands.Cog):
        await webhook.send(content=emoji,
                username=ctx.author.display_name,
                avatar_url=ctx.author.avatar_url_as(format="png"))
+
+   @commands.dm_only()
+   @commands.command("予約投稿")
+   async def future_send(self, ctx, time: str,channel_id:int):
+      def user_check(message):
+         return message.author.id == ctx.author.id
+      await ctx.send("メッセージを入力してください")
+      msg = await self.bot.wait_for('message',check=user_check)
+
+      await ctx.send("この内容でいいですか？間違い無ければ「はい」と入力してください")
+      def user_check2(message):
+         return message.author.id == ctx.author.id and message.content=="はい"
+      try:
+         await self.bot.wait_for('message',check=user_check2)
+      except asyncio.TimeoutError:
+         return
+      self.db.allinsert("future_send",[ctx.author.id,msg.content,time,channel_id])
+      
    
    @commands.command()
    async def rainbow3(self, ctx):
@@ -149,11 +154,48 @@ class Main(commands.Cog):
           emoji += "\n"
           pop = text.pop(0)
           text.append(pop)
-          
-      
       await webhook.send(content=emoji,
               username=ctx.author.display_name,
               avatar_url=ctx.author.avatar_url_as(format="png"))
+   
+   
+   @commands.command(aliases=["スタンプ","b","big"])
+   async def stamp(self, ctx, emoji: discord.Emoji):
+      url=emoji.url
+      await ctx.message.delete()
+      while True:
+         ch_webhooks = await ctx.channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            break
+      await webhook.send(content=url,
+         username=ctx.author.display_name,
+         avatar_url=ctx.message.author.avatar_url_as(format="png"))
+   
+
+   
+   @commands.command(aliases=["u","unicode"])
+   async def normal_emoji(self, ctx, emojis:str):
+      try:
+         emojis=f"{ord(emojis):x}"
+         url=f"https://bot.mods.nyc/twemoji/{emojis}.png"
+      except  TypeError:
+         await ctx.reply("その絵文字は対応していません、ごめんね")
+         return
+
+      await ctx.message.delete()
+      while True:
+         ch_webhooks = await ctx.channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            break
+      await webhook.send(content=url,
+         username=ctx.author.display_name,
+         avatar_url=ctx.message.author.avatar_url_as(format="png"))
    
    @commands.Cog.listener()
    async def on_member_join(self,member):

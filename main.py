@@ -2,6 +2,7 @@ import traceback  # エラー表示のためにインポート
 from os.path import join, dirname
 from dotenv import load_dotenv
 import os
+import discord
 from discord.ext import commands  # Bot Commands Frameworkをインポート
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -18,9 +19,9 @@ INITIAL_EXTENSIONS = [
 class MyBot(commands.Bot):
 
     # MyBotのコンストラクタ。
-    def __init__(self, command_prefix):
+    def __init__(self, command_prefix,intents):
         # スーパークラスのコンストラクタに値を渡して実行。
-        super().__init__(command_prefix)
+        super().__init__(command_prefix,intents=intents)
 
         # INITIAL_COGSに格納されている名前から、コグを読み込む。
         # エラーが発生した場合は、エラー内容を表示。
@@ -40,5 +41,6 @@ class MyBot(commands.Bot):
 
 # MyBotのインスタンス化及び起動処理。
 if __name__ == '__main__':
-    bot = MyBot(command_prefix='!')
+    intents = discord.Intents.all()
+    bot = MyBot(command_prefix='!',intents=intents)
     bot.run(os.environ.get("NAO")) # Botのトークン
