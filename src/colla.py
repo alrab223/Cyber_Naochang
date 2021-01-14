@@ -53,6 +53,18 @@ def out():
     im1.paste(img_resize,(int(img_resize.size[0]/2),int(img_resize.size[1])),img_resize)
     im1.save('picture/colla/new.png', quality=95)
 
+def gaming():
+    img1 = cv2.imread('picture/colla/image.png')
+    img2 = cv2.imread('rainbow.jpg')
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
+
+    img2 =cv2.resize(img2,(img1.shape[1],img1.shape[0]))
+    
+    blended = cv2.addWeighted(src1=img1,alpha=0.5,src2=img2,beta=0.5,gamma=0)
+        
+    cv2.imwrite('picture/colla/new.png', cv2.cvtColor(blended, cv2.COLOR_RGB2BGR))
+
 def colla_maker(num):
     if num == 1:
         mirikora2()
@@ -64,6 +76,8 @@ def colla_maker(num):
         ppp()
     elif num == 5:
         out()
-    else:
+    elif num==6:
         nhk()
+    else:
+        gaming()
     
