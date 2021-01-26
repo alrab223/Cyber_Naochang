@@ -31,10 +31,11 @@ class Time(commands.Cog):
        
    
    def daily_reset(self):
-      
-      row=self.db.select(f'select id from user_data')
-      for i in row:
-         self.db.update(f'update user_data set mayuge_coin=mayuge_coin+3,naosuki=0 where id={i["id"]}')
+      self.db.update(f'update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
+   
+   @commands.command()
+   async def test111(self, ctx):
+      self.daily_reset()
 
    def weather_get(self):
       self.weather_list=[]
@@ -118,7 +119,7 @@ class Time(commands.Cog):
       elif self.idol_command == "noncommand_commands":
          pass
       else:
-         await channel.send("残念！")
+         await ctx.send("残念！")
   
    @commands.command()
    async def start3(self, ctx):
@@ -194,7 +195,8 @@ class Time(commands.Cog):
    async def printer(self):
       nowtime = datetime.datetime.now()
       if nowtime.hour == 23 and nowtime.minute == 59:
-         await asyncio.sleep(60-nowtime.second)
+         wait_seconds = 60.0- float(nowtime.second)
+         await asyncio.sleep(wait_seconds)
          if self.event==True:
             await self.special_daily()
          self.daily_reset()

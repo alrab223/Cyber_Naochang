@@ -9,6 +9,7 @@ import shutil
 import glob
 import sqlite3
 from contextlib import closing
+from PIL import Image
 
 import discord
 import MeCab
@@ -137,7 +138,11 @@ class Main(commands.Cog):
       except asyncio.TimeoutError:
          return
       self.db.allinsert("future_send",[ctx.author.id,msg.content,time,channel_id])
-      
+   
+   @commands.dm_only()
+   @commands.command("")
+   async def secret_root(self, ctx,user:discord.Member):
+      print(user)
    
    @commands.command()
    async def rainbow3(self, ctx):
@@ -158,10 +163,19 @@ class Main(commands.Cog):
               username=ctx.author.display_name,
               avatar_url=ctx.author.avatar_url_as(format="png"))
    
-   
+
+   def paste(self,img_list):
+      img_width=0
+      dst = Image.new('RGBA', (120*len(img_list),120))
+      for img in img_list:
+         
+         img=img.resize((120,120))
+         dst.paste(img, (img_width,0))
+         img_width+=img.width
+      return dst
+      
    @commands.command(aliases=["スタンプ","b","big"])
-   async def stamp(self, ctx, emoji: discord.Emoji):
-      url=emoji.url
+   async def stamp2(self, ctx, *emoji: discord.Emoji):
       await ctx.message.delete()
       while True:
          ch_webhooks = await ctx.channel.webhooks()
@@ -170,12 +184,29 @@ class Main(commands.Cog):
             await ctx.channel.create_webhook(name="naochang")
          else:
             break
-      await webhook.send(content=url,
+
+      if len(emoji)<2:
+         url=emoji[0].url
+         await webhook.send(content=url,
          username=ctx.author.display_name,
          avatar_url=ctx.message.author.avatar_url_as(format="png"))
-   
-
-   
+      else:
+         for i, emoji in enumerate(emoji):
+            pd.download_img(emoji.url,f"picture/emojis/emoji{i}.png")
+         png_name = sorted(glob.glob('picture/emojis/*png'))
+         im_list=[]
+         for file_name in png_name:
+            Image_tmp = Image.open(file_name)
+            im_list.append(Image_tmp)
+         self.paste(im_list).save("picture/emojis/union_emoji.png")
+         await webhook.send(file=discord.File("picture/emojis/union_emoji.png"),
+            username=ctx.author.display_name,
+            avatar_url=ctx.message.author.avatar_url_as(format="png"))
+         for i in sorted(glob.glob('picture/emojis/*png')):
+            os.remove(i)
+      
+      
+         
    @commands.command(aliases=["u","unicode"])
    async def normal_emoji(self, ctx, emojis:str):
       try:
@@ -184,7 +215,6 @@ class Main(commands.Cog):
       except  TypeError:
          await ctx.reply("その絵文字は対応していません、ごめんね")
          return
-
       await ctx.message.delete()
       while True:
          ch_webhooks = await ctx.channel.webhooks()

@@ -34,27 +34,28 @@ class Game(commands.Cog):
       for i in emoji:
          print(i)
    
-   async def bonus_slot(self, ctx, ei, judge,msg):
+   async def bonus_slot(self, ctx, ei, judge,msg,slot_title,slot_num,debug=False,etc=False):
       count = 0
       for i, element in enumerate(ei):
          if judge[i] == element:
             count += 1
 
-      if (count == 3 or count==4) and  random.randint(1, 5) == 1:
+      if ((count == slot_num-2 or count==slot_num-1) and  random.randint(1, slot_num) == 1) or debug==True:
          self.chance=True
          gif = await ctx.send("チャンス発生！！", file=discord.File("picture/bonus/triad.gif"))
          
          await msg.delete()
          await asyncio.sleep(3.5)
          await gif.delete()
+         gif=await ctx.send(file=discord.File("picture/bonus/yattemiyo.gif"))
          for j in range(4):
             judge = []
             emoji=""
-            gif, msg = await self.slot_maker(ctx, ["picture/bonus/yattemiyo.gif"], "kamiyanao_slot", 5)
-            for i in range(5):
-               if i<3:
+            _, msg = await self.slot_maker(ctx,['picture/bonus/yattemiyo.gif'],slot_title, slot_num,True)
+            for i in range(slot_num):
+               if i<slot_num-2:
                   ran = ei[i]
-               elif j == 3 and i==3:
+               elif j == 3 and i==slot_num-2:
                   ran = ei[i]
                else:
                   ran = random.choice(ei)
@@ -75,13 +76,14 @@ class Game(commands.Cog):
             await asyncio.sleep(1)
             if ei == judge:
                return msg
-            await gif.delete()
+            if j==3:
+               await gif.delete()
             await msg.delete()
       else:
          return False
 
 
-   async def slot_maker(self, ctx, num,slot,count):
+   async def slot_maker(self, ctx, num,slot,count,bonus=False):
       emoji=""
       for i in range(count):
          emoji += str(self.bot.get_emoji(int(os.environ.get(slot))))
@@ -89,13 +91,16 @@ class Game(commands.Cog):
          msg=await ctx.send(emoji)
          return msg
       else:
-         gif=await ctx.send(file=discord.File(random.choice(num)))
+         if bonus==True:
+            gif=False
+         else:
+            gif=await ctx.send(file=discord.File(random.choice(num)))
          msg=await ctx.send(emoji)
          await asyncio.sleep(3)
          return gif, msg
    
-   async def slot_flag(self, ctx,slot:str):
-      if ctx.channel.id != int(os.environ.get("naosuki_ch")):
+   async def slot_flag(self, ctx,slot:str,debug=False):
+      if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug==False:
          return False
       if self.slot == True:
          return False
@@ -139,10 +144,10 @@ class Game(commands.Cog):
       await msg.edit(content="き")
 
    @commands.command("なおすきスロット")
-   async def naosuki_slot(self, ctx):
+   async def naosuki_slot(self, ctx,debug=False):
       """スロットで遊びます"""
      
-      if await self.slot_flag(ctx, "naosuki") == False:
+      if await self.slot_flag(ctx, "naosuki",debug) == False:
          self.slot = False
          return
          
@@ -230,10 +235,10 @@ class Game(commands.Cog):
       self.slot = False
    
    @commands.command("レインボースロット")
-   async def side(self, ctx):
+   async def side(self, ctx,debug=False):
       """スロットで遊びます"""
      
-      coin=await self.slot_flag(ctx, "24_hours")
+      coin=await self.slot_flag(ctx, "24_hours",debug)
       if coin == False:
          self.slot = False
          return
@@ -262,8 +267,9 @@ class Game(commands.Cog):
             judge.append(ran)
             emoji += str(self.bot.get_emoji(ran))   
          await msg.edit(content=emoji)
-         
-         if ei == judge:
+         answer = await self.bonus_slot(ctx, ei, judge, msg,'2ndSIDE',7,debug)
+         if ei == judge or answer!=False:
+            msg=answer
             emoji = emdic["nao_gif"]
             for i in emoji:
                ej = str(self.bot.get_emoji(i))
@@ -275,9 +281,9 @@ class Game(commands.Cog):
       self.slot = False
    
    @commands.command("神谷奈緒チャレンジ")
-   async def hours24_slot(self, ctx):
+   async def hours24_slot(self, ctx,debug=False):
       """スロットで遊びます"""
-      coin=await self.slot_flag(ctx, "24_hours")
+      coin=await self.slot_flag(ctx, "24_hours",debug)
       if coin == False:
          self.slot = False
          return
@@ -298,7 +304,7 @@ class Game(commands.Cog):
          emoji += str(self.bot.get_emoji(ran))
          await asyncio.sleep(0.1)
          await msg.edit(content=emoji)
-      answer = await self.bonus_slot(ctx, ei, judge, msg)
+      answer = await self.bonus_slot(ctx, ei, judge, msg,"kamiyanao_slot",5,debug)
       if answer != False and answer!=True:
          msg=answer
       if ei == judge or answer!=False:
@@ -416,9 +422,7 @@ class Game(commands.Cog):
             await ctx.send(f"{ctx.author.mention}チャレンジ成功！！")
             self.chance = True
             break
-      for i in judge:
-         if self.chance == False:
-            answer = await self.bonus_slot(ctx, ei, judge, msg)
+
       await gif.delete()
       await log.delete()
       self.slot = False
