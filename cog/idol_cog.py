@@ -162,7 +162,7 @@ class Idol(commands.Cog):
    
 
    @commands.command("納税")
-   async def gasya(self, ctx):
+   async def tax(self, ctx):
       webhook=await self.get_webhook(ctx)
       webhook_url=webhook.url
       webhook_c=Webhook_Control()
@@ -172,14 +172,14 @@ class Idol(commands.Cog):
       num=random.randint(1,100)
       if num<4:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==5]
-      elif num>3 or num<16:
+      elif num>3 and num<16:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==4]
       else:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==3]
       idol=random.choice(ssr)
       url = f'https://starlight.kirara.ca/api/v1/card_t/{idol["id"]}'
       r = requests.get(url)
-      urls.append(r.json()['result'][0]['spread_image_ref'])
+      urls.append(r.json()['result'][0]['card_image_ref'])
 
       webhook_c.image_add(urls)    
       webhook_c.add_title(title=r.json()['result'][0]['name'])

@@ -12,7 +12,6 @@ from contextlib import closing
 from PIL import Image
 
 import discord
-import MeCab
 import requests
 import emoji
 from dotenv import load_dotenv
