@@ -21,13 +21,13 @@ class Listener(tweepy.StreamListener):
 
         print('------------------------------')
         user = status.author.name
-        text = status.text.replace("#アイマス三昧","")
+        text = status.text.replace("#imas_cg一挙配信DAY1","")
         icon=status.author.profile_image_url.replace("normal","400x400")
         
         if "retweeted_status" in status._json.keys() or "#" in text or "RT" in text:
             return True
-        if random.randint(1, 2) != 1:#対象が多いときの対策
-            return True
+        # if random.randint(1, 2) != 1:#対象が多いときの対策
+        #     return True
       #   with (sqlite3.connect("tweet.db")) as conn:
       #      c = conn.cursor()
       #      data=[user,text,icon]
@@ -55,4 +55,4 @@ auth.set_access_token(AT, AS)
 listener = Listener()
 # 受信開始
 stream = tweepy.Stream(auth, listener)
-stream.filter(track = ["アイマス三昧"])# 指定の検索ワードでフィルタ
+stream.filter(track = ["imas_cg一挙配信DAY1"])# 指定の検索ワードでフィルタ

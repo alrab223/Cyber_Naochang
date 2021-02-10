@@ -11,10 +11,11 @@ import glob
 import sqlite3
 import urllib3
 from bs4 import BeautifulSoup
-
+import requests
 from src.DbModule import DbModule as db
+from src.webhook_control import Webhook_Control
 # コグとして用いるクラスを定義。
-class Time(commands.Cog):
+class Time(commands.Cog,Webhook_Control):
 
    def __init__(self, bot):
       self.bot = bot
@@ -161,7 +162,7 @@ class Time(commands.Cog):
    @tasks.loop(seconds=6.0)
    async def printer3(self):
     
-      channel = self.bot.get_channel(778607627667898398)
+      channel = self.bot.get_channel(804977272032460820)
       print("開始")
       with open("text/global_stream.csv") as f:
          reader = csv.reader(f)
@@ -235,14 +236,26 @@ class Time(commands.Cog):
       self.daily_reset()
       self.weather_get()
       channel = self.bot.get_channel(744610643927236750)
-      await channel.send("Happy New Year")
-      with open("json/emoji.json", "r")as f:
-         dic=json.load(f)
-      for i in dic["rainbow_art"]:
-         emoji += str(self.bot.get_emoji(int(i)))
-      await channel.send(emoji)
-      await channel.send("2021")
-      await channel.send(emoji)
+      while True:
+         ch_webhooks = await channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            break
+      url=webhook.url
+      with open('json/webhook.json','r')as f:
+         params=json.load(f)
+      urls=['https://imas.gamedbs.jp/cgss/images_2d/1567233922837_ejv41gzt.png','https://imas.gamedbs.jp/cgss/images_2d/1567233922838_j96ox17z.png','https://imas.gamedbs.jp/cgss/images_2d/1567233922839_7rejf2ut.png','https://imas.gamedbs.jp/cgss/images_2d/1567233922840_2x3rbc6y.png']
+
+      params=self.image_add(params,urls)
+      requests.post(url,json.dumps(params),headers={'Content-Type': 'application/json'})
+   
+
+   @commands.command()
+   async def strat7(self, ctx):
+      await self.special_daily()
+      
 
 
   

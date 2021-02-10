@@ -6,8 +6,10 @@ from discord.ext import commands  # Bot Commands Frameworkのインポート
 from discord.ext import tasks
 import json
 import csv
+import requests
 import glob
 from libneko import EmbedNavigator
+from src.webhook_control import Webhook_Control
 class Idol(commands.Cog):
 
 
@@ -93,6 +95,151 @@ class Idol(commands.Cog):
       path = "picture/hajime/*.jpg"
       num = glob.glob(path)
       await ctx.send(file=discord.File(random.choice(num)))
+   
+   async def get_webhook(self,ctx):
+      while True:
+         ch_webhooks = await ctx.channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            return webhook
+   
+   @commands.command('webtes')
+   async def webhook_test(self,ctx):
+      webhook=await self.get_webhook(ctx)
+      webhook_url=webhook.url
+      webhook_c=Webhook_Control()
+      urls=[]
+      with open('json/gif_url.json','r')as f:
+         gif=json.load(f)
+      urls=random.sample(gif['HAJIME'],4)
+      webhook_c.image_add(urls)    
+      webhook_c.add_title(title='わっほーい！')
+      webhook_c.webhook_send(webhook_url)  
+      await asyncio.sleep(3)
+      # async for log in ctx.channel.history(limit=10):
+      #    if log.author.id==webhook.id:
+      #       await log.delete()
+      #       break
+   
+   @commands.command('apites')
+   async def webhook_test(self,ctx,idol_name:str='神谷奈緒'):
+      webhook=await self.get_webhook(ctx)
+      webhook_url=webhook.url
+      webhook_c=Webhook_Control()
+      urls=[]
+      with open('json/idol_data.json','r')as f:
+         idol_data=json.load(f)
+      idols=[x for x in idol_data['result'] if x['name_only']==idol_name]
+      ids=[x['id'] for x in idols]
+      ids+=[x['id']+1 for x in idols]
+      ids=random.sample(ids,4)
+      for id in ids:
+         url = f'https://starlight.kirara.ca/api/v1/card_t/{id}'
+         r = requests.get(url)
+         urls.append(r.json()['result'][0]['spread_image_ref'])
+
+      webhook_c.image_add(urls)    
+      webhook_c.add_title(title=idol_name)
+      webhook_c.webhook_send(webhook_url)  
+
+   
+   @commands.command("ガシャ")
+   async def gasya(self, ctx):
+      with open('text/newcard.csv')as f:
+         reader=csv.reader(f)
+         l = [row for row in reader]
+         l=random.choice(l)
+         embed = discord.Embed(title=f"{l[3]}")
+         embed.set_image(url=f'https://pink-check.school/image/withoutsign/{l[1]}')
+         embed.add_field(name=f"コスト",value=f"{l[15]}")
+         embed.add_field(name=f"攻",value=f"{l[18]}")
+         embed.add_field(name=f"守",value=f"{l[19]}")
+         if l[21]!='':
+            embed.add_field(name=f"特技「{l[20]}」",value=f"{l[21]}",inline=False)
+         await ctx.send(embed=embed)
+   
+
+   @commands.command("納税")
+   async def gasya(self, ctx):
+      webhook=await self.get_webhook(ctx)
+      webhook_url=webhook.url
+      webhook_c=Webhook_Control()
+      urls=[]
+      with open('json/idol_data.json','r')as f:
+         idol_data=json.load(f)
+      num=random.randint(1,100)
+      if num<4:
+         ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==5]
+      elif num>3 or num<16:
+         ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==4]
+      else:
+         ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==3]
+      idol=random.choice(ssr)
+      url = f'https://starlight.kirara.ca/api/v1/card_t/{idol["id"]}'
+      r = requests.get(url)
+      urls.append(r.json()['result'][0]['spread_image_ref'])
+
+      webhook_c.image_add(urls)    
+      webhook_c.add_title(title=r.json()['result'][0]['name'])
+      webhook_c.webhook_send(webhook_url)  
+
+   @commands.command("カード検索")
+   async def cards(self, ctx,name:str):
+      card_list=[]
+      card_list_evolution=[]
+      with open('text/newcard.csv')as f:
+         reader=csv.reader(f)
+         l = [row for row in reader]
+         for card in l:
+
+            if name == card[6]:
+               card_list=[]
+               card_list.append(card[3])
+               card_list_evolution.append(card[3]+'+')
+               break
+            elif name in card[3] and card[3][-1]!='+':
+               card_list.append(card[3])
+            elif name in card[3] and card[3][-1]=='+':
+               card_list_evolution.append(card[3])
+         print(card_list,card_list_evolution)
+
+         if len(card_list)>10:
+            await ctx.send('該当カードが多いのでもう少し絞ってね')
+         elif len(card_list)>1:
+            embed = discord.Embed(title="複数見つかりました",description="選んでください")
+            for card in card_list:
+               embed.add_field(name=f"カード名",value=f"{card}")
+            await ctx.send(embed=embed)
+ 
+         elif len(card_list)==1:
+            card=[x for x in l if x[3]==card_list[0]][0]
+            card2=[x for x in l if x[3]==card_list_evolution[0]][0]
+            webhook=await self.get_webhook(ctx)
+            webhook_url=webhook.url
+            webhook_c=Webhook_Control()
+            urls=[f'https://pink-check.school/image/withoutsign/{card[1]}',f'https://pink-check.school/image/withoutsign/{card2[1]}']
+            webhook_c.image_add(urls)    
+            webhook_c.add_title(title=f"{card[3]},{card2[3]}")
+            webhook_c.add_field(name=f"コスト",value=f"{card[15]}")
+            webhook_c.add_field(name=f"攻",value=f"{card[18]}")
+            webhook_c.add_field(name=f"守",value=f"{card[19]}")
+            if card[21]!='':
+               webhook_c.add_field(name=f"特技「{card[20]}」",value=f"{card[21]}",inline=False)
+            webhook_c.add_field(name=f"コスト",value=f"{card2[15]}")
+            webhook_c.add_field(name=f"攻",value=f"{card2[18]}")
+            webhook_c.add_field(name=f"守",value=f"{card2[19]}")
+            if card2[21]!='':
+               webhook_c.add_field(name=f"特技「{card2[20]}」",value=f"{card2[21]}",inline=False)
+            webhook_c.webhook_send(webhook_url)  
+         else:
+            await ctx.send(f"見つかりませんでした")
+
+
+
+      
+
 
          
       

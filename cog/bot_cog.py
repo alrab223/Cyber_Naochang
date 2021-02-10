@@ -173,9 +173,19 @@ class Main(commands.Cog):
          dst.paste(img, (img_width,0))
          img_width+=img.width
       return dst
+   
+   def paste2(self,img_list):
+      img_height=0
+      dst = Image.new('RGBA', (120,120*len(img_list)))
+      for img in img_list:
+         
+         img=img.resize((120,120))
+         dst.paste(img, (0,img_height))
+         img_height+=img.height
+      return dst
       
    @commands.command(aliases=["スタンプ","b","big"])
-   async def stamp2(self, ctx, *emoji: discord.Emoji):
+   async def stamp(self, ctx, *emoji: discord.Emoji):
       await ctx.message.delete()
       while True:
          ch_webhooks = await ctx.channel.webhooks()
@@ -204,6 +214,52 @@ class Main(commands.Cog):
             avatar_url=ctx.message.author.avatar_url_as(format="png"))
          for i in sorted(glob.glob('picture/emojis/*png')):
             os.remove(i)
+   
+   @commands.command(aliases=["d"])
+   async def stamp2(self, ctx, *emoji: discord.Emoji):
+      await ctx.message.delete()
+      while True:
+         ch_webhooks = await ctx.channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            break
+
+      if len(emoji)<2:
+         url=emoji[0].url
+         await webhook.send(content=url,
+         username=ctx.author.display_name,
+         avatar_url=ctx.message.author.avatar_url_as(format="png"))
+      else:
+         for i, emoji in enumerate(emoji):
+            pd.download_img(emoji.url,f"picture/emojis/emoji{i}.png")
+         png_name = sorted(glob.glob('picture/emojis/*png'))
+         im_list=[]
+         for file_name in png_name:
+            Image_tmp = Image.open(file_name)
+            im_list.append(Image_tmp)
+         self.paste2(im_list).save("picture/emojis/union_emoji.png")
+         await webhook.send(file=discord.File("picture/emojis/union_emoji.png"),
+            username=ctx.author.display_name,
+            avatar_url=ctx.message.author.avatar_url_as(format="png"))
+         for i in sorted(glob.glob('picture/emojis/*png')):
+            os.remove(i)
+   
+   @commands.command("絵文字メーカー")
+   async def emoji_free_maker(self, ctx, *emoji: str):
+      print(emoji)
+      emoji=await self.convert(ctx, emoji)
+      print(emoji)
+      await ctx.message.delete()
+      while True:
+         ch_webhooks = await ctx.channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await ctx.channel.create_webhook(name="naochang")
+         else:
+            break
+
       
       
          
@@ -250,6 +306,15 @@ class Main(commands.Cog):
        emoji = await ctx.guild.fetch_emojis()
        for i in emoji:
            print(i)
+   
+   @commands.command()
+   async def server_status(self, ctx):
+      text = subprocess.run(['vcgencmd', 'measure_temp'], stdout=subprocess.PIPE, text=True).stdout.strip().split("=")
+      text2=subprocess.run(['vcgencmd','get_mem arm'], stdout=subprocess.PIPE, text=True).stdout.strip().split("=")
+      embed = discord.Embed(title="サーバー状態")
+      embed.add_field(name="CPU温度", value=f"{text[1]}")
+      embed.add_field(name="メモリ使用量", value=f"{text2[1]}/3776M")
+      await ctx.send(embed=embed)
 
    @commands.Cog.listener()
    async def on_reaction_add(self, reaction, user):
