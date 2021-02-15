@@ -11,8 +11,8 @@ import requests
 import urllib3
 from bs4 import BeautifulSoup
 from discord.ext import commands, tasks
-from src.DbModule import DbModule as db
-from src.webhook_control import Webhook_Control
+from cog.utils.DbModule import DbModule as db
+from cog.utils.webhook_control import Webhook_Control
 
 
 # コグとして用いるクラスを定義。
@@ -76,12 +76,6 @@ class Time(commands.Cog, Webhook_Control):
    async def test_reset(self, ctx):
       self.weather_get()
 
-   @commands.command()
-   async def test8(self, ctx):
-      web = await ctx.channel.webhooks()
-      webhook = discord.utils.get(web, name="naochangs")
-      print(webhook)
-
    async def get_webhook(self, channel):
       while True:
          ch_webhooks = await channel.webhooks()
@@ -137,21 +131,6 @@ class Time(commands.Cog, Webhook_Control):
       else:
          await ctx.send("残念！")
 
-   @commands.command()
-   async def start3(self, ctx):
-      self.printer3.start()
-
-   @tasks.loop(seconds=6.0)
-   async def printer2(self):
-      channel = self.bot.get_channel()
-      with open("src/stream.txt", "r") as f:
-         tweet = f.read().splitlines()
-      if os.path.getsize("src/stream.txt") > 0:
-         await channel.send(tweet[0])
-         del tweet[0]
-         with open("src/stream.txt", "w") as f:
-            f.write("\n".join(tweet))
-   
    @tasks.loop(seconds=5.0)
    async def bd_printer2(self):
       if self.flag == 1:
@@ -181,7 +160,6 @@ class Time(commands.Cog, Webhook_Control):
 
    @tasks.loop(seconds=6.0)
    async def printer3(self):
-
       channel = self.bot.get_channel(804977272032460820)
       print("開始")
       with open("text/global_stream.csv") as f:

@@ -6,7 +6,7 @@ import random
 
 import discord
 from discord.ext import commands
-from src.DbModule import DbModule as db
+from cog.utils.DbModule import DbModule as db
 
 
 class Game(commands.Cog):

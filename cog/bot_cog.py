@@ -12,10 +12,10 @@ import requests
 from discord.ext import commands
 from googletrans import Translator
 from PIL import Image
-from src import colla
-from src import picture_download as pd
-from src import wiki_search
-from src.DbModule import DbModule as db
+from cog.utils import colla
+from cog.utils import picture_download as pd
+from cog.utils import wiki_search
+from cog.utils.DbModule import DbModule as db
 
 
 class Main(commands.Cog):
@@ -381,7 +381,6 @@ class Main(commands.Cog):
             await message.channel.send(file=discord.File("picture/colla/new.png"))
 
          elif message.content == "切り抜き":
-            # if ctx.author.id!=425142865073799180:
             pd.download_img(
                 message.attachments[0].url,
                 "picture/colla/image.png")

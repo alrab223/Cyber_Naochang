@@ -8,8 +8,8 @@ import discord
 import requests
 from discord.ext import commands
 from libneko import EmbedNavigator
-from src.DbModule import DbModule as db
-from src.webhook_control import Webhook_Control
+from cog.utils.DbModule import DbModule as db
+from cog.utils.webhook_control import Webhook_Control
 
 
 class Idol(commands.Cog):
