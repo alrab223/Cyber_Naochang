@@ -9,12 +9,14 @@ import csv
 import requests
 import glob
 from libneko import EmbedNavigator
+from src.DbModule import DbModule as db
 from src.webhook_control import Webhook_Control
 class Idol(commands.Cog):
 
 
    def __init__(self, bot):
       self.bot = bot
+      self.db = db()
    
 
    @commands.command("アイドル検索")
@@ -129,6 +131,17 @@ class Idol(commands.Cog):
       webhook_url=webhook.url
       webhook_c=Webhook_Control()
       urls=[]
+      idol=self.db.select(f'select *from idol_data where name="{idol_name}"')[0]
+      tall=idol['height']
+      webhook_c.add_field(name="属性", value=f"{idol['element']}",inline=False)
+      webhook_c.add_field(name="年齢", value=f"{idol['age']}")
+      webhook_c.add_field(name="身長", value=f"{tall}cm")
+      webhook_c.add_field(name="誕生日", value=f"{idol['birthday']}")
+      webhook_c.add_field(name="出身地", value=f"{idol['birthplace']}")
+      webhook_c.add_field(name="血液型", value=f"{idol['blood_type']}")
+      webhook_c.add_field(name="利き手", value=f"{idol['hand']}")
+      webhook_c.add_field(name="趣味", value=f"{idol['hobby']}")
+      webhook_c.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
       with open('json/idol_data.json','r')as f:
          idol_data=json.load(f)
       idols=[x for x in idol_data['result'] if x['name_only']==idol_name]
@@ -162,7 +175,7 @@ class Idol(commands.Cog):
    
 
    @commands.command("納税")
-   async def gasya(self, ctx):
+   async def tax(self, ctx):
       webhook=await self.get_webhook(ctx)
       webhook_url=webhook.url
       webhook_c=Webhook_Control()
@@ -172,14 +185,14 @@ class Idol(commands.Cog):
       num=random.randint(1,100)
       if num<4:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==5]
-      elif num>3 or num<16:
+      elif num>3 and num<16:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==4]
       else:
          ssr=[x for x in idol_data['result'] if x['rarity_dep']['rarity']==3]
       idol=random.choice(ssr)
       url = f'https://starlight.kirara.ca/api/v1/card_t/{idol["id"]}'
       r = requests.get(url)
-      urls.append(r.json()['result'][0]['spread_image_ref'])
+      urls.append(r.json()['result'][0]['card_image_ref'])
 
       webhook_c.image_add(urls)    
       webhook_c.add_title(title=r.json()['result'][0]['name'])

@@ -90,22 +90,45 @@ class Time(commands.Cog,Webhook_Control):
       webhook = discord.utils.get(web, name="naochangs")
       print(webhook)
    
+   async def get_webhook(self,channel):
+      while True:
+         ch_webhooks = await channel.webhooks()
+         webhook = discord.utils.get(ch_webhooks, name="naochang")
+         if webhook==None:
+            await channel.create_webhook(name="naochang")
+         else:
+            return webhook
+   
    async def idol_print(self, channel):
+      webhook=await self.get_webhook(channel)
+      webhook_url=webhook.url
+      webhook_c=Webhook_Control()
+      urls=[]
       idol=self.db.select(f'select *from idol_data where name="{self.idol_command}"')[0]
       tall=idol['height']
-      embed = discord.Embed(title=f"{idol['name']}")
-      files = discord.File(f"picture/daily_idol/{self.idol_command}.png", filename="image.png")
-      embed.set_image(url="attachment://image.png")
-      embed.add_field(name="属性", value=f"{idol['element']}",inline=False)
-      embed.add_field(name="年齢", value=f"{idol['age']}")
-      embed.add_field(name="身長", value=f"{tall}cm")
-      embed.add_field(name="誕生日", value=f"{idol['birthday']}")
-      embed.add_field(name="出身地", value=f"{idol['birthplace']}")
-      embed.add_field(name="血液型", value=f"{idol['blood_type']}")
-      embed.add_field(name="利き手", value=f"{idol['hand']}")
-      embed.add_field(name="趣味", value=f"{idol['hobby']}")
-      embed.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
-      await channel.send(file=files, embed=embed)
+      webhook_c.add_field(name="属性", value=f"{idol['element']}",inline=False)
+      webhook_c.add_field(name="年齢", value=f"{idol['age']}")
+      webhook_c.add_field(name="身長", value=f"{tall}cm")
+      webhook_c.add_field(name="誕生日", value=f"{idol['birthday']}")
+      webhook_c.add_field(name="出身地", value=f"{idol['birthplace']}")
+      webhook_c.add_field(name="血液型", value=f"{idol['blood_type']}")
+      webhook_c.add_field(name="利き手", value=f"{idol['hand']}")
+      webhook_c.add_field(name="趣味", value=f"{idol['hobby']}")
+      webhook_c.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
+      with open('json/idol_data.json','r')as f:
+         idol_data=json.load(f)
+      idols=[x for x in idol_data['result'] if x['name_only']==self.idol_command]
+      ids=[x['id'] for x in idols]
+      ids+=[x['id']+1 for x in idols]
+      ids=random.sample(ids,4)
+      for id in ids:
+         url = f'https://starlight.kirara.ca/api/v1/card_t/{id}'
+         r = requests.get(url)
+         urls.append(r.json()['result'][0]['spread_image_ref'])
+
+      webhook_c.image_add(urls)    
+      webhook_c.add_title(title=self.idol_command)
+      webhook_c.webhook_send(webhook_url)  
       self.db.update(f'update idol_data set done=1 where name="{idol["name"]}"')
       with open("text/idol.txt", "w") as f:
          f.write("noncommand_commands")

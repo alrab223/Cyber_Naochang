@@ -322,49 +322,6 @@ class Game(commands.Cog):
       await log.delete()
       self.slot = False
    
-   @commands.command("最後のチャレンジ")
-   async def final_challenge(self, ctx):
-      coin=self.db.select(f'select mayuge_coin from user_data where id={ctx.author.id}')[0]
-
-      if coin >1:
-         self.slot = False
-         return
-      self.db.update(f"update user_data set mayuge_coin=0 where id={ctx.author.id}")
-      log=await ctx.send(f"{ctx.author.mention}全てのコインをばら撒いた！")
-      with open("json/emoji.json", "r") as f:
-         emdic = json.load(f)
-      emoji=""
-      judge=[]
-      ei=emdic["kamiyanao"]
-      path = "picture/gif2/*.gif"
-      num = glob.glob(path)
-      gif,msg=await self.slot_maker(ctx,num,"kamiyanao_slot",5)
-      emoji = ""
-      for i in range(5):
-         ran=random.choice(ei)
-         judge.append(ran)
-         emoji += str(self.bot.get_emoji(ran))
-         await asyncio.sleep(0.1)
-         await msg.edit(content=emoji)
-      answer = await self.bonus_slot(ctx, ei, judge, msg)
-      if answer != False and answer!=True:
-         msg=answer
-      if ei == judge or answer!=False:
-         emoji = emdic["nao_gif"]
-         emoji+= emdic["kamiyanao"]
-         emoji += emdic["naosuki"]
-         for i in emoji:
-            ej = str(self.bot.get_emoji(i))
-            try:
-               await msg.add_reaction(ej)
-            except AttributeError:
-               pass
-         await ctx.send(f"{ctx.author.mention}チャレンジ成功！！")
-      await gif.delete()
-      await log.delete()
-      self.slot = False
-
-
    @commands.command("連続神谷奈緒チャレンジ")
    async def con_hours24_slot(self, ctx):
       """スロットで遊びます"""
