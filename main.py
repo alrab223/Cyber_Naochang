@@ -1,12 +1,13 @@
-import traceback  # エラー表示のためにインポート
-from os.path import join, dirname
-from dotenv import load_dotenv
 import os
+import traceback
+from os.path import dirname, join
+
 import discord
-from discord.ext import commands  # Bot Commands Frameworkをインポート
+from discord.ext import commands
+from dotenv import load_dotenv
+
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
-# 読み込むコグの名前を格納しておく。
 INITIAL_EXTENSIONS = [
     'cog.bot_cog',
     "cog.music_cog",
@@ -15,32 +16,23 @@ INITIAL_EXTENSIONS = [
     "cog.idol_cog"
 ]
 
-# クラスの定義。ClientのサブクラスであるBotクラスを継承。
-class MyBot(commands.Bot):
 
-    # MyBotのコンストラクタ。
-    def __init__(self, command_prefix,intents):
-        # スーパークラスのコンストラクタに値を渡して実行。
-        super().__init__(command_prefix,intents=intents)
+class NAO(commands.Bot):
 
-        # INITIAL_COGSに格納されている名前から、コグを読み込む。
-        # エラーが発生した場合は、エラー内容を表示。
-        for cog in INITIAL_EXTENSIONS:
-            try:
-                self.load_extension(cog)
-            except Exception:
-                traceback.print_exc()
+   def __init__(self, command_prefix, intents):
+      super().__init__(command_prefix, intents=intents)
+      for cog in INITIAL_EXTENSIONS:
+         try:
+            self.load_extension(cog)
+         except Exception:
+            traceback.print_exc()
 
-    # Botの準備完了時に呼び出されるイベント
-    async def on_ready(self):
-        print('-----')
-        print(self.user.name)
-        print(self.user.id)
-        print('-----')
+   async def on_ready(self):
+      print('起動しました')
+      print(self.user.name)
+      
 
-
-# MyBotのインスタンス化及び起動処理。
 if __name__ == '__main__':
-    intents = discord.Intents.all()
-    bot = MyBot(command_prefix='!',intents=intents)
-    bot.run(os.environ.get("NAO")) # Botのトークン
+   intents = discord.Intents.all()
+   bot = NAO(command_prefix='!', intents=intents)
+   bot.run(os.environ.get("NAO"))  # トークン
