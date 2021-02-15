@@ -1,37 +1,32 @@
 import asyncio
 import json
 import os
-import random
 import re
 import datetime
 import subprocess
-import shutil
 import glob
 import sqlite3
-from contextlib import closing
 from PIL import Image
 
 import discord
 import requests
-import emoji
 from dotenv import load_dotenv
 from discord.ext import commands  # Bot Commands Frameworkのインポート
 from googletrans import Translator
-from pykakasi import kakasi
-from src import colla,wiki_search
+from src import colla, wiki_search
 from src import picture_download as pd
 from src.DbModule import DbModule as db
 load_dotenv()
-# コグとして用いるクラスを定義。
-class Main(commands.Cog):
 
+
+class Main(commands.Cog):
 
    def __init__(self, bot):
       self.bot = bot
       self.tweet_wait = False
       self.db = db()
       with open("json/picture.json", "r") as f:
-         self.colla_num=json.load(f) 
+         self.colla_num = json.load(f)
       
    @commands.command("goodbye")
    async def disconnect(self, ctx):
@@ -40,20 +35,20 @@ class Main(commands.Cog):
       await self.bot.logout()
   
    @commands.command("ナオビーム")
-   async def logs(self, ctx,num:int):
-      logs=[]
-      if ctx.author.id!=425142865073799180:
-           await ctx.send("あなたにこのコマンドは使えません")
-           return
+   async def logs(self, ctx, num: int):
+      logs = []
+      if ctx.author.id != 425142865073799180:
+         await ctx.send("あなたにこのコマンドは使えません")
+         return
       async for log in ctx.channel.history(limit=num):
          logs.append(log)
       await ctx.channel.delete_messages(logs)
    
    @commands.command("リネーム")
    async def rename(self, ctx, name: str):
-      guild=self.bot.get_guild(566227588054253569)
+      guild = self.bot.get_guild(566227588054253569)
       for member in guild.members:
-         if member.id==660877225863938079:
+         if member.id == 660877225863938079:
             await member.edit(nick=name)
             break
    
@@ -61,7 +56,7 @@ class Main(commands.Cog):
    async def sql_changer(self, ctx):
       with (sqlite3.connect("db/bot_data.db")) as conn:
          c = conn.cursor()
-      c.execute(f'select * from vc_notification_setting')
+      c.execute('select * from vc_notification_setting')
       datas = c.fetchall()
       
       for data in datas:
@@ -364,10 +359,10 @@ class Main(commands.Cog):
             #if ctx.author.id!=425142865073799180:
             pd.download_img(message.attachments[0].url, "picture/colla/image.png")
             response = requests.post(
-              'https://api.remove.bg/v1.0/removebg',
-              files={'image_file': open('picture/colla/image.png', 'rb')},
-              data={'size': 'auto'},
-              headers={'X-Api-Key':os.environ.get("removebg_api")},
+               'https://api.remove.bg/v1.0/removebg',
+               files={'image_file': open('picture/colla/image.png', 'rb')},
+               data={'size': 'auto'},
+               headers={'X-Api-Key':os.environ.get("removebg_api")},
             )
             if response.status_code == requests.codes.ok:
                with open('picture/colla/no-bg.png', 'wb') as out:
@@ -377,27 +372,6 @@ class Main(commands.Cog):
             await message.delete()
             await message.channel.send(file=discord.File("picture/colla/no-bg.png"))         
       
-      if "!random" in message.content:
-          text=message.content.split("!random")
-          num=random.randint(0,100)
-          await message.channel.send(text[0] + str(num) + text[1])
-      if message.content.startswith("https://discordapp.com/channels/566227588054253569"):
-         text=message.content.split("566227588054253569/")[1]
-         text=text.split("/")
-         channel = self.bot.get_channel(int(text[0]))
-         messages=await channel.fetch_message(int(text[1]))
-         
-         if messages.attachments:
-               embed = discord.Embed(title="引用元",description=messages.content)
-               embed.set_image(url=messages.attachments[0].url)
-               
-               embed.set_author(name=messages.author.display_name,icon_url=messages.author.avatar_url)
-         else:
-               embed = discord.Embed(title="引用元",description=messages.content)
-               
-               embed.set_author(name=messages.author.display_name,icon_url=messages.author.avatar_url)
-         await message.channel.send(embed=embed)
-
       if "なおはじ" in message.content:
          emoji = ["<:na:681866058055024801>","<:o_:681866075935211555>","<:ha:681866087402700829>","<:ji:681866097858969677>"]
          for i in emoji:
