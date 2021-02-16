@@ -2,8 +2,12 @@ import asyncio
 import json
 import os
 import re
+import datetime
 
+import discord
+from discord import Spotify
 from discord.ext import commands
+
 from cog.utils.DbModule import DbModule as db
 
 
@@ -17,11 +21,47 @@ class Main(commands.Cog):
 
    @commands.is_owner()
    @commands.command("ナオビーム")
-   async def logs(self, ctx, num: int):
+   async def nao_beam(self, ctx, user: discord.Member, num: int):
       logs = []
       async for log in ctx.channel.history(limit=num):
          logs.append(log)
       await ctx.channel.delete_messages(logs)
+
+   @commands.command()
+   async def status(self, ctx, user: discord.Member = None):
+      roles = []
+      user = user or ctx.author
+      embed = discord.Embed(title=user.name, color=0xC902FF)
+      embed.set_thumbnail(url=user.avatar_url)
+      embed.add_field(name="ユーザーID", value=user.id)
+      embed.add_field(name="ニックネーム", value=user.display_name)
+      joined_time = user.joined_at + datetime.timedelta(hours=9)
+      embed.add_field(name="サーバー参加日", value=joined_time.strftime('%Y-%m-%d %H:%M:%S'), inline=False)
+      joined_time = user.created_at + datetime.timedelta(hours=9)
+      embed.add_field(name="ユーザー作成日", value=joined_time.strftime('%Y-%m-%d %H:%M:%S'))
+      coin_have = self.db.select(f'select mayuge_coin from user_data where id={user.id}')[0]['mayuge_coin']
+      embed.add_field(name="所持まゆげコイン枚", value=coin_have)
+      roles = [x.name.replace('@', '') for x in user.roles]
+      text = ",".join(roles)
+      embed.add_field(name="ロール", value=text, inline=False)
+      await ctx.send(embed=embed)
+
+   @commands.command()
+   async def spotify(self, ctx, user: discord.Member = None):
+      user = user or ctx.author
+      for activity in user.activities:
+         if isinstance(activity, Spotify):
+            embed = discord.Embed(
+                title=f"{user.name}'s Spotify",
+                description=f"今「{activity.title}」を聴いています",
+                color=0xC902FF)
+            embed.set_thumbnail(url=activity.album_cover_url)
+            embed.add_field(name="アーティスト", value=activity.artist)
+            embed.add_field(name="アルバム", value=activity.album)
+            embed.add_field(name="URL", value=f"https://open.spotify.com/track/{activity.track_id}", inline=False)
+            start_time = activity.created_at + datetime.timedelta(hours=9)
+            embed.set_footer(text=f"開始時刻{start_time.strftime('%H:%M')}")
+            await ctx.send(embed=embed)
 
    @commands.command("vc通知")
    @commands.dm_only()
