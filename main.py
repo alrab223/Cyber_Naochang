@@ -13,7 +13,10 @@ INITIAL_EXTENSIONS = [
     "cog.music_cog",
     "cog.timeprocess_cog",
     "cog.game_cog",
-    "cog.idol_cog"
+    "cog.idol_cog",
+    "cog.funny_cog",
+    "cog.dispander",
+    "cog.convenience_cog"
 ]
 
 
