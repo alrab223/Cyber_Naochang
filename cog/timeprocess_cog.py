@@ -30,9 +30,6 @@ class Time(commands.Cog, Webhook_Control):
       with open("text/idol.txt", "r") as f:
          self.idol_command = f.read().replace("\n", "")
 
-   def daily_reset(self):
-      self.db.update('update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
-
    def weather_get(self):
       self.weather_list = []
       tokyo = 'https://weather.yahoo.co.jp/weather/jp/13/4410.html'
@@ -134,9 +131,8 @@ class Time(commands.Cog, Webhook_Control):
    @tasks.loop(seconds=5.0)
    async def bd_printer2(self):
       if self.flag == 1:
-         with open("json/naosuki_count.json")as f:
-            dic = json.load(f)
-         text = "なおすきカウント:" + str(dic["count"])
+         count = self.db.select('select count from naosuki_count')[0]
+         text = "なおすきカウント:" + str(count["count"])
          await self.bot.change_presence(activity=discord.Game(name=text))
          self.flag += 1
       elif self.flag == 2:
@@ -152,7 +148,7 @@ class Time(commands.Cog, Webhook_Control):
          user_count = sum(1 for member in guild.members if not member.bot)
          await self.bot.change_presence(activity=discord.Game(name=f"現在のメンバー数:{user_count-4}"))
          self.flag = 1
-   
+
    @bd_printer2.before_loop
    async def before_printer(self):
       print('waiting...')
@@ -192,7 +188,7 @@ class Time(commands.Cog, Webhook_Control):
          await asyncio.sleep(wait_seconds)
          if self.event:
             await self.special_daily()
-         self.daily_reset()
+         self.db.update('update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
          self.weather_get()
          channel = self.bot.get_channel(744610643927236750)
          path = "picture/nao/*.jpg"
@@ -225,9 +221,9 @@ class Time(commands.Cog, Webhook_Control):
                self.db.update(f"delete from future_send where time='{message['time']}' and id={message['id']}")
 
    async def special_daily(self):
-      self.daily_reset()
+      self.db.update('update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
       self.weather_get()
- 
- 
+
+
 def setup(bot):
    bot.add_cog(Time(bot))
