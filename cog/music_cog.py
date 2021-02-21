@@ -2,8 +2,6 @@ import asyncio
 import glob
 import json
 import os
-import random
-import sqlite3
 
 import discord
 from discord.ext import commands  # Bot Commands Frameworkのインポート
@@ -70,13 +68,7 @@ class Music(commands.Cog, MusicBot):
    @commands.command("pm")
    async def playlist_make(self, ctx, se: str):
       """プレイリストを作ります(se)"""
-      if os.path.exists(
-          "music/" +
-          se +
-          ".mp3") != True and os.path.exists(
-          "music/" +
-          se +
-              ".m4a") != True:
+      if os.path.exists("music/" + se + ".mp3") is False and os.path.exists("music/" + se + ".m4a") is False:
          await ctx.send("SEが存在しません")
          return
       with open("json/bot_id.json", "r")as f:
@@ -123,7 +115,7 @@ class Music(commands.Cog, MusicBot):
    @commands.command("q")
    async def queue(self, ctx, se: str):
       """キューをセットします(se)"""
-      if os.path.exists("music/" + se + ".mp3") != True and os.path.exists("music/" + se + ".m4a") != True:
+      if os.path.exists("music/" + se + ".mp3") is False and os.path.exists("music/" + se + ".m4a") is False:
          await ctx.send("SEが存在しません")
          return
       self.music_queue.append(se)
@@ -196,7 +188,8 @@ class Music(commands.Cog, MusicBot):
 
    @commands.Cog.listener()
    async def on_message(self, message):
-      if message.content.startswith("<") == False and message.content.startswith("!") == False and message.content.startswith("http") == False and self.read == True:
+      if message.content.startswith("<") is False and message.content.startswith("!") is False and\
+         message.content.startswith("http") is False and self.read is True:
          tts = gTTS(text=message.content, lang='ja')
          tts.save(f'music/mp3/tts{self.read_count}.mp3')
          self.read_count += 1
@@ -219,10 +212,7 @@ class Music(commands.Cog, MusicBot):
             else:
                return
 
-         self.voich.play(
-             discord.FFmpegPCMAudio(
-                 sorted(num)[0]),
-             after=check_error)
+         self.voich.play(discord.FFmpegPCMAudio(sorted(num)[0]), after=check_error)
          self.voich.source = discord.PCMVolumeTransformer(self.voich.source)
          self.voich.source.volume = self.volume
 
@@ -231,40 +221,24 @@ class Music(commands.Cog, MusicBot):
       if member.bot:
          return
 
-      with (sqlite3.connect("db/bot_data.db")) as conn:
-         c = conn.cursor()
-         if after.channel is None and len(before.channel.members) == 1:
-            c.execute('update vc_notification_setting set reset=0')
-         try:
-            sql = c.execute(
-                'select id,members,reset,vc_notification from vc_notification_setting where vc_notification=1')
-            id_list = [x for x in sql]
-            for i in id_list:
-               if len(
-                       after.channel.members) >= i[1] and i[3] == 1 and i[2] == 0:
-                  dm_channel = self.bot.get_user(i[0])
-                  await dm_channel.send(f"{after.channel.name}に{len(after.channel.members)}以上います")
-                  c.execute(
-                      f'update vc_notification_setting set reset=1 where id={i[0]}')
-         except AttributeError:
-            pass
-         conn.commit()
+      if after.channel is None and len(before.channel.members) == 1:
+         self.db.update('update vc_notification set reset=0')
+      try:
+         sql = self.db.select('select *from vc_notification where vc_notification=1')
+         id_list = [x for x in sql]
+         for i in id_list:
+            if len(after.channel.members) >= i['members'] and i['vc_notification'] == 1 and i['reset'] == 0:
+               dm_channel = self.bot.get_user(i['id'])
+               await dm_channel.send(f"{after.channel.name}に{len(after.channel.members)}以上います")
+               self.db.update(f'update vc_notification set reset=1 where id={i["id"]}')
+      except AttributeError:
+         pass
 
       if before.channel is None and self.voich is not None:
-         if random.randint(1, 10) < 4:
-            with open("text/voice_se.txt", "r") as f:
-               text = f.readlines()
-            await asyncio.sleep(0.7)
-            self.voich.play(
-                discord.FFmpegPCMAudio(random.choice(text).replace("\n", "")))
-            self.voich.source = discord.PCMVolumeTransformer(self.voich.source)
-            self.voich.source.volume = self.volume
-         else:
-            self.voich.play(discord.FFmpegPCMAudio('music/tissue_man.m4a'))
-
-# Bot本体側からコグを読み込む際に呼び出される関数。
+         self.voich.play(discord.FFmpegPCMAudio('music/tissue_man.m4a'))
+         self.voich.source = discord.PCMVolumeTransformer(self.voich.source)
+         self.voich.source.volume = self.volume
 
 
 def setup(bot):
-
-   bot.add_cog(Music(bot))  # TestCogにBotを渡してインスタンス化し、Botにコグとして登録する。
+   bot.add_cog(Music(bot))
