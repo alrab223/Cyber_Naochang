@@ -24,6 +24,10 @@ class Main(commands.Cog):
       """botを切ります"""
       await ctx.send("また会いましょう")
       await self.bot.logout()
+   
+   @commands.command()
+   async def ping(self,ctx):
+      await ctx.send(f'応答速度:{round(self.bot.latency * 1000)}ms')
 
    @commands.Cog.listener()
    async def on_member_join(self, member):
