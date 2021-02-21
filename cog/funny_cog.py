@@ -178,12 +178,8 @@ class Funny(commands.Cog):
          for i in emoji:
             await message.add_reaction(i)
       if "なおすき" in message.content:
-         with open("json/naosuki_count.json", "r") as f:
-            dic = json.load(f)
-         dic["count"] += 1
-         with open("json/naosuki_count.json", "w") as f:
-            json.dump(dic, f, indent=3)
-
+         self.db.update('update naosuki_count set count=count+1')
+         
 
 def setup(bot):
    bot.add_cog(Funny(bot))  # TestCogにBotを渡してインスタンス化し、Botにコグとして登録する。
