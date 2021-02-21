@@ -18,25 +18,6 @@ class Idol(commands.Cog):
       self.bot = bot
       self.db = db()
 
-   @commands.command("アイドル検索")
-   async def idol_search(self, ctx, name: str):
-      with open("Idol.csv") as f:
-         text = [row for row in csv.reader(f)]
-      for i in text:
-         if i[1] == name:
-            num = int(i[0])
-      if num is None:
-         return
-      embed = discord.Embed(title=f"{text[num][1]}({text[num][2]})")
-      embed.add_field(name="属性", value=f"{text[num][3]}", inline=False)
-      embed.add_field(name="年齢", value=f"{text[num][6]}")
-      embed.add_field(name="誕生日", value=f"{text[num][4]}/{text[num][5]}")
-      embed.add_field(name="出身地", value=f"{text[num][10]}")
-      embed.add_field(name="血液型", value=f"{text[num][8]}")
-      embed.add_field(name="利き手", value=f"{text[num][9]}")
-      embed.add_field(name="趣味", value=f"{text[num][11]}")
-      await ctx.send(embed=embed)
-
    @commands.command("ユニット検索")
    async def unit_search(self, ctx, *args):
       flag = 0
@@ -231,7 +212,6 @@ class Idol(commands.Cog):
                card_list.append(card[3])
             elif name in card[3] and card[3][-1] == '+':
                card_list_evolution.append(card[3])
-         print(card_list, card_list_evolution)
 
          if len(card_list) > 10:
             await ctx.send('該当カードが多いのでもう少し絞ってね')
@@ -273,7 +253,5 @@ class Idol(commands.Cog):
             await ctx.send("見つかりませんでした")
 
 
-# Bot本体側からコグを読み込む際に呼び出される関数。
 def setup(bot):
-
-   bot.add_cog(Idol(bot))  # TestCogにBotを渡してインスタンス化し、Botにコグとして登録する。
+   bot.add_cog(Idol(bot))
