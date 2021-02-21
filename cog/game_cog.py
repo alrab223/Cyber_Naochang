@@ -95,14 +95,12 @@ class Game(commands.Cog):
          return gif, msg
 
    async def slot_flag(self, ctx, slot: str, debug=False):
-      if ctx.channel.id != int(
-              os.environ.get("naosuki_ch")) and debug == False:
+      if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug is False:
          return False
-      if self.slot:
+      if self.slot is True:
          return False
       self.slot = True
-      flag_list = self.db.select(
-          f'select naosuki,mayuge_coin from user_data where id={ctx.author.id}')[0]
+      flag_list = self.db.select(f'select naosuki,mayuge_coin from user_data where id={ctx.author.id}')[0]
 
       if slot == "naosuki":
          if flag_list['naosuki'] == 1:
