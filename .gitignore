@@ -3,7 +3,9 @@
 /.idea/
 __pycache__
 .DS_Store
-*.json
 music
 cog/debug_cog.py
 debug.py
+settings.json
+picture/colla/image.png
+picture/colla/new.png
