@@ -39,4 +39,4 @@ class NAO(commands.Bot):
 if __name__ == '__main__':
    intents = discord.Intents.all()
    bot = NAO(command_prefix='/', intents=intents)
-   bot.run(os.environ.get("NAO"))  # トークン
+   bot.run(os.environ.get("DEBUG_NAO"))  # トークン
