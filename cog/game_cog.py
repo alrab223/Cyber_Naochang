@@ -181,7 +181,7 @@ class Game(commands.Cog):
    @commands.command("スーパーなおすきスロット")
    async def super_naosuki_slot(self, ctx, debug=False):
       """スロットで遊びます"""
-   
+
       # if await self.naosuki_slot_setup(ctx, debug) is False:
       #    self.slot = False
       #    return
@@ -203,6 +203,25 @@ class Game(commands.Cog):
          if log.author.id == webhook.id:
             await log.delete()
             break
+      with open('json/emoji.json', 'r')as f:
+         emoji_dic = json.load(f)
+      judge = []
+      reels = ''
+      for i in range(4):
+         reel = random.choice(emoji_dic['super_naosuki_slot'])
+         judge.append(reel)
+         reels += str(self.bot.get_emoji(reel))
+         await asyncio.sleep(0.3)
+         if i == 0:
+            msg = await ctx.send(reels)
+         else:
+            await msg.edit(content=reels)
+
+      if judge.count(judge[0]) == len(judge):
+         reaction = emoji_dic["nao_gif"]
+         for i in reaction:
+            ej = str(self.bot.get_emoji(i))
+            await msg.add_reaction(ej)
       self.slot = False
 
    @commands.command("レインボースロット")
