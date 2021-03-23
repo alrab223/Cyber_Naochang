@@ -72,9 +72,9 @@ class Idol(commands.Cog):
 
    @commands.command("奈緒ルーレット")
    async def nao_roulette(self, ctx):
-      webhook = await self.get_webhook(ctx)
-      webhook_url = webhook.url
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
       urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823585001908076614/nao.gif'] * 2
       webhook_c.image_add(urls)
       webhook_c.add_title(title='奈緒ルーレット')
@@ -90,9 +90,9 @@ class Idol(commands.Cog):
 
    @commands.command("肇ルーレット")
    async def hajime_roulette(self, ctx):
-      webhook = await self.get_webhook(ctx)
-      webhook_url = webhook.url
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
       urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823582685485465600/hajime.gif'] * 2
       webhook_c.image_add(urls)
       webhook_c.add_title(title='肇ルーレット')
@@ -114,8 +114,8 @@ class Idol(commands.Cog):
          hajime_cards = [row for row in reader if '藤原肇' in row]
          nao_card = random.choice(nao_cards)
          hajime_card = random.choice(hajime_cards)
-      webhook = await self.get_webhook(ctx)
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
       urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823585001908076614/nao.gif',
               'https://cdn.discordapp.com/attachments/658856327019495475/823582685485465600/hajime.gif']
       webhook_c.image_add(urls)
@@ -134,20 +134,11 @@ class Idol(commands.Cog):
       webhook_c.add_field(name=hajime_card[3].split(']')[0] + ']', value=hajime_card[3].split(']')[1])
       webhook_c.webhook_send(webhook.url)
 
-   async def get_webhook(self, ctx):
-      while True:
-         ch_webhooks = await ctx.channel.webhooks()
-         webhook = discord.utils.get(ch_webhooks, name="naochang")
-         if webhook is None:
-            await ctx.channel.create_webhook(name="naochang")
-         else:
-            return webhook
-
    @commands.command('webtes')
    async def webhook_test(self, ctx):
-      webhook = await self.get_webhook(ctx)
-      webhook_url = webhook.url
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
       urls = []
       with open('json/gif_url.json', 'r')as f:
          gif = json.load(f)
@@ -163,9 +154,9 @@ class Idol(commands.Cog):
 
    @commands.command('apites')
    async def webhook_test2(self, ctx, idol_name: str = '神谷奈緒'):
-      webhook = await self.get_webhook(ctx)
-      webhook_url = webhook.url
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
       urls = []
       idol = self.db.select(
           f'select *from idol_data where name="{idol_name}"')[0]
@@ -215,9 +206,9 @@ class Idol(commands.Cog):
 
    @commands.command("納税")
    async def tax(self, ctx):
-      webhook = await self.get_webhook(ctx)
-      webhook_url = webhook.url
       webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
       urls = []
       with open('json/idol_data.json', 'r')as f:
          idol_data = json.load(f)
@@ -270,9 +261,9 @@ class Idol(commands.Cog):
          elif len(card_list) == 1:
             card = [x for x in cards if x[3] == card_list[0]][0]
             card2 = [x for x in cards if x[3] == card_list_evolution[0]][0]
-            webhook = await self.get_webhook(ctx)
-            webhook_url = webhook.url
             webhook_c = Webhook_Control()
+            webhook = await webhook_c.get_webhook(ctx)
+            webhook_url = webhook.url
             urls = [
                 f'https://pink-check.school/image/withoutsign/{card[1]}',
                 f'https://pink-check.school/image/withoutsign/{card2[1]}']
