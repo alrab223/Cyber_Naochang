@@ -14,6 +14,7 @@ INITIAL_EXTENSIONS = [
     "cog.timeprocess_cog",
     "cog.game_cog",
     "cog.idol_cog",
+    "cog.debug_cog",
     "cog.funny_cog",
     "cog.dispander",
     "cog.convenience_cog"
@@ -37,5 +38,5 @@ class NAO(commands.Bot):
 
 if __name__ == '__main__':
    intents = discord.Intents.all()
-   bot = NAO(command_prefix='!', intents=intents)
+   bot = NAO(command_prefix='/', intents=intents)
    bot.run(os.environ.get("NAO"))  # トークン
