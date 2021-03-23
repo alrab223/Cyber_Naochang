@@ -191,7 +191,7 @@ class Idol(commands.Cog):
          reader = csv.reader(f)
          cards = [row for row in reader]
          card = random.choice(cards)
-         embed = discord.Embed(title=f"{card[3]}")
+         embed = discord.Embed(title=f"{card[3]}", url=f"https://pink-check.school/card/detail/{card[1]}")
          embed.set_image(
              url=f'https://pink-check.school/image/withoutsign/{card[1]}')
          embed.add_field(name="コスト", value=f"{card[15]}")

@@ -17,16 +17,16 @@ class Main(commands.Cog):
       self.db = db()
       with open("json/picture.json", "r") as f:
          self.colla_num = json.load(f)
-         
+
    @commands.is_owner()
    @commands.command("goodbye")
    async def disconnect(self, ctx):
       """botを切ります"""
       await ctx.send("また会いましょう")
       await self.bot.logout()
-   
+
    @commands.command()
-   async def ping(self,ctx):
+   async def ping(self, ctx):
       await ctx.send(f'応答速度:{round(self.bot.latency * 1000)}ms')
 
    @commands.Cog.listener()
@@ -36,21 +36,12 @@ class Main(commands.Cog):
          text = f.read()
       await dm_channel.send(member.mention)
       await dm_channel.send(text)
-      self.db.insert(
-          "user_data", [
-              "id", "gold", "birthday,naosuki", "vc_notification", "mayuge_coin"], [
-              member.id, 10000, None, 0, 0, 10])
+      self.db.insert("user_data", ["id", "gold", "birthday,naosuki", "vc_notification", "mayuge_coin"], [member.id, 10000, None, 0, 0, 10])
 
    @commands.command()
    async def server_status(self, ctx):
-      text = subprocess.run(['vcgencmd',
-                             'measure_temp'],
-                            stdout=subprocess.PIPE,
-                            text=True).stdout.strip().split("=")
-      text2 = subprocess.run(['free',
-                              '-m'],
-                             stdout=subprocess.PIPE,
-                             text=True).stdout.strip().split("=")
+      text = subprocess.run(['vcgencmd', 'measure_temp'], stdout=subprocess.PIPE, text=True).stdout.strip().split("=")
+      text2 = subprocess.run(['free', '-m'], stdout=subprocess.PIPE, text=True).stdout.strip().split("=")
       text2 = text2[0].split(':')[1].split(' ')
       text2 = [x for x in text2 if x != '']
       embed = discord.Embed(title="サーバー状態")

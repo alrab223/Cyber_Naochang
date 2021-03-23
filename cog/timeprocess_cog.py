@@ -43,8 +43,11 @@ class Time(commands.Cog, Webhook_Control):
          instance = (http.request('GET', j))
          soup = BeautifulSoup(instance.data, 'html.parser')
          tenki_today = soup.select_one('#main > div.forecastCity > table > tr > td > div > p.pict')
-         text = tenki_today.text.replace("今日の天気は", "")
-         self.weather_list.append(f"{name[i]}の天気:{text}")
+         try:
+            text = tenki_today.text.replace("今日の天気は", "")
+            self.weather_list.append(f"{name[i]}の天気:{text}")
+         except AttributeError:
+            pass
 
    async def daily_idol(self, channel):
       idol = self.db.select('select *from idol_data where done!=1')
