@@ -7,6 +7,7 @@ import random
 import discord
 from discord.ext import commands
 from cog.utils.DbModule import DbModule as db
+from cog.utils.webhook_control import Webhook_Control
 
 
 class Game(commands.Cog):
@@ -94,83 +95,83 @@ class Game(commands.Cog):
          await asyncio.sleep(3)
          return gif, msg
 
-   async def slot_flag(self, ctx, slot: str, debug=False):
-      if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug is False:
+   async def slot_flag(self, ctx, debug):
+      if ctx.channel.id != int(os.environ.get("exp")) and debug is False:
          return False
       if self.slot is True:
          return False
       self.slot = True
-      flag_list = self.db.select(f'select naosuki,mayuge_coin from user_data where id={ctx.author.id}')[0]
 
-      if slot == "naosuki":
-         if flag_list['naosuki'] == 1:
-            await ctx.send(f"{ctx.author.mention}なおすきスロット,スーパーなおすきスロットは1日一回までだよ！")
-            return False
-         else:
-            self.db.update(
-                f'update user_data set naosuki=1 where id={ctx.author.id}')
-      elif slot == "24_hours":
-         if flag_list['mayuge_coin'] == 0:
-            await ctx.send(f"{ctx.author.mention}まゆげコインが足りません")
-            return False
-         else:
-            self.db.update(
-                f'update user_data set mayuge_coin=mayuge_coin-1 where id={ctx.author.id}')
-            return flag_list['mayuge_coin'] - 1
+   async def naosuki_slot_setup(self, ctx, debug=False):
+      if await self.slot_flag(ctx, debug) is False:
+         return False
+
+      flag_list = self.db.select(f'select naosuki from user_data where id={ctx.author.id}')[0]
+
+      if flag_list['naosuki'] == 1:
+         await ctx.reply("なおすきスロット,スーパーなおすきスロットは1日一回までだよ！")
+         return False
       else:
-         if flag_list['mayuge_coin'] < 5:
-            await ctx.send(f"{ctx.author.mention}連続チャレンジは5つコインが必要です")
-            return False
+         self.db.update(f'update user_data set naosuki=1 where id={ctx.author.id}')
+
+   async def slot_setup(self, ctx, slot: str, debug=False):
+      if await self.slot_flag(ctx, debug) is False:
+         return False
+
+      with open('json/slot_data.json', 'r')as f:  # スロットの種類と使用コイン数を取得
+         slot_data = json.load(f)
+
+      flag_list = self.db.select(f'select mayuge_coin from user_data where id={ctx.author.id}')[0]
+      if flag_list['mayuge_coin'] >= slot_data[slot]:
+         self.db.update(f'update user_data set mayuge_coin=mayuge_coin-{slot_data[slot]} where id={ctx.author.id}')
+         return flag_list['mayuge_coin'] - slot_data[slot]
+      else:
+         await ctx.reply(f"まゆげコインが足りません。コインが{slot_data[slot]}枚必要です")
+         return False
+
+   async def naosuki_special(self, msg):
+      reel = ''
+      sp_emoji = self.get_emoji()
+      for i in sp_emoji:
+         if i == "\n":
+            reel += "\n"
+            await msg.edit(content=reel)
+            await asyncio.sleep(0.4)
+         elif i == 0:
+            await msg.edit(content=reel)
+            await asyncio.sleep(0.4)
          else:
-            self.db.update(
-                f'update user_data set mayuge_coin=mayuge_coin-5 where id={ctx.author.id}')
-
-            return flag_list['mayuge_coin'] - 5
-
-      return True
+            reel += str(self.bot.get_emoji(i))
+      await msg.edit(content=reel)
 
    @commands.command("なおすきスロット")
-   async def naosuki_slot(self, ctx, debug=False):
+   async def naosuki_slot(self, ctx, debug=False, special_slot=False):
       """スロットで遊びます"""
 
-      if await self.slot_flag(ctx, "naosuki", debug) == False:
+      if await self.naosuki_slot_setup(ctx, debug) is False:
          self.slot = False
          return
-
       with open("json/emoji.json", "r") as f:
          emdic = json.load(f)
-      emoji = ""
-      judge = []
-      ei = emdic["naosuki"]
+      target = emdic["naosuki"]  # 当たりリールを保存する変数
       path = "picture/gif/*.gif"
       num = glob.glob(path)
       gif, msg = await self.slot_maker(ctx, num, "naosuki_emoji", 4)
-
-      emoji = ""
-      if random.randint(1, 200) == 70:
-         sp_emoji = self.get_emoji()
-         for i in sp_emoji:
-            if i == "\n":
-               emoji += "\n"
-               await msg.edit(content=emoji)
-               await asyncio.sleep(0.4)
-            elif i == 0:
-               await msg.edit(content=emoji)
-               await asyncio.sleep(0.4)
-            else:
-               emoji += str(self.bot.get_emoji(i))
-         await msg.edit(content=emoji)
+      if random.randint(1, 200) == 70 or special_slot is True:
+         await self.naosuki_special(msg)
       else:
+         judge = []  # 全リールを保存するリスト
+         reel: str = ''  # リールを保存する変数
          for i in range(4):
-            ran = random.choice(ei)
+            ran = random.choice(target)
             judge.append(ran)
-            emoji += str(self.bot.get_emoji(ran))
+            reel += str(self.bot.get_emoji(ran))
             await asyncio.sleep(0.3)
-            await msg.edit(content=emoji)
+            await msg.edit(content=reel)
 
-         if ei == judge:
-            emoji = emdic["nao_gif"]
-            for i in emoji:
+         if target == judge:
+            reel = emdic["nao_gif"]
+            for i in reel:
                ej = str(self.bot.get_emoji(i))
                await msg.add_reaction(ej)
             await ctx.send(f"{ctx.author.mention}なおすき！なおすき！なおすき！")
@@ -178,53 +179,37 @@ class Game(commands.Cog):
       self.slot = False
 
    @commands.command("スーパーなおすきスロット")
-   async def super_naosuki_slot(self, ctx):
+   async def super_naosuki_slot(self, ctx, debug=False):
       """スロットで遊びます"""
-
-      if await self.slot_flag(ctx, "naosuki") == False:
-         self.slot = False
-         return
-
-      with open("json/emoji.json", "r") as f:
-         emdic = json.load(f)
-      emoji = ""
-      judge = []
-      ei = emdic["naosuki_english"]
-
-      for i in emdic["rainbow_art"]:
-         emoji += str(self.bot.get_emoji(int(i)))
-      rainbow1 = await ctx.send(emoji)
-      msg = await self.slot_maker(ctx, 1, "naosuki_english", 7)
-      rainbow2 = await ctx.send(emoji)
-      await asyncio.sleep(3)
-      emoji = ""
-      if random.randint(1, 1000) == 70:
-         sp_emoji = emdic["2ndSIDE"]
-         for i in sp_emoji:
-            emoji += str(self.bot.get_emoji(i))
-         await msg.edit(content=emoji)
-      else:
-         for i in range(7):
-            ran = random.choice(ei)
-            judge.append(ran)
-            emoji += str(self.bot.get_emoji(ran))
-         await msg.edit(content=emoji)
-
-         if ei == judge:
-            emoji = emdic["nao_gif"]
-            for i in emoji:
-               ej = str(self.bot.get_emoji(i))
-               await msg.add_reaction(ej)
-            await ctx.send(f"{ctx.author.mention}なおすき！なおすき！なおすき！")
-      await rainbow1.delete()
-      await rainbow2.delete()
+   
+      # if await self.naosuki_slot_setup(ctx, debug) is False:
+      #    self.slot = False
+      #    return
+      webhook_c = Webhook_Control()
+      webhook = await webhook_c.get_webhook(ctx)
+      webhook_url = webhook.url
+      urls = []
+      with open('json/gif_url.json', 'r')as f:
+         gif_list = json.load(f)
+      urls.append(random.choice(gif_list['KAMIYANAO_PETIT']))
+      urls.append(gif_list['NAOSUKI_SLOT'])
+      urls.append(gif_list['SUPER_NAOSUKI_SLOT'])
+      urls.append(gif_list['RAINBOW_GIF'])
+      webhook_c.image_add(urls)
+      webhook_c.add_title(title='スーパーなおすきスロット')
+      webhook_c.webhook_send(webhook_url)
+      await asyncio.sleep(5)
+      async for log in ctx.channel.history(limit=10):
+         if log.author.id == webhook.id:
+            await log.delete()
+            break
       self.slot = False
 
    @commands.command("レインボースロット")
    async def side(self, ctx, debug=False):
       """スロットで遊びます"""
 
-      coin = await self.slot_flag(ctx, "24_hours", debug)
+      coin = await self.slot_setup(ctx, "RAINBOW_SLOT", debug)
       if not coin:
          self.slot = False
          return
@@ -269,7 +254,7 @@ class Game(commands.Cog):
    @commands.command("神谷奈緒チャレンジ")
    async def hours24_slot(self, ctx, debug=False):
       """スロットで遊びます"""
-      coin = await self.slot_flag(ctx, "24_hours", debug)
+      coin = await self.slot_setup(ctx, "NAO_CHALLENGE", debug)
       if not coin:
          self.slot = False
          return
@@ -291,7 +276,7 @@ class Game(commands.Cog):
          await asyncio.sleep(0.1)
          await msg.edit(content=emoji)
       answer = await self.bonus_slot(ctx, ei, judge, msg, "kamiyanao_slot", 5, debug)
-      if answer and answer != True:
+      if answer and answer is True:
          msg = answer
       if ei == judge or answer:
          emoji = emdic["nao_gif"]
@@ -311,7 +296,7 @@ class Game(commands.Cog):
    @commands.command("連続神谷奈緒チャレンジ")
    async def con_hours24_slot(self, ctx):
       """スロットで遊びます"""
-      coin = await self.slot_flag(ctx, "24_5hours")
+      coin = await self.slot_setup(ctx, "NAO_CHALLENGE5")
       if not coin:
          self.slot = False
          return
