@@ -72,21 +72,67 @@ class Idol(commands.Cog):
 
    @commands.command("奈緒ルーレット")
    async def nao_roulette(self, ctx):
-      msg = await ctx.send(file=discord.File('picture/nao/nao.gif'))
-      await asyncio.sleep(5)
-      await msg.delete()
-      path = "picture/nao/*.jpg"
+      webhook = await self.get_webhook(ctx)
+      webhook_url = webhook.url
+      webhook_c = Webhook_Control()
+      urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823585001908076614/nao.gif'] * 2
+      webhook_c.image_add(urls)
+      webhook_c.add_title(title='奈緒ルーレット')
+      webhook_c.webhook_send(webhook_url)
+      await asyncio.sleep(3)
+      async for log in ctx.channel.history(limit=10):
+         if log.author.id == webhook.id:
+            await log.delete()
+            break
+      path = "picture/hajime/*.jpg"
       num = glob.glob(path)
       await ctx.send(file=discord.File(random.choice(num)))
 
    @commands.command("肇ルーレット")
    async def hajime_roulette(self, ctx):
-      msg = await ctx.send(file=discord.File('picture/hajime/hajime.gif'))
-      await asyncio.sleep(5)
-      await msg.delete()
+      webhook = await self.get_webhook(ctx)
+      webhook_url = webhook.url
+      webhook_c = Webhook_Control()
+      urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823582685485465600/hajime.gif'] * 2
+      webhook_c.image_add(urls)
+      webhook_c.add_title(title='肇ルーレット')
+      webhook_c.webhook_send(webhook_url)
+      await asyncio.sleep(3)
+      async for log in ctx.channel.history(limit=10):
+         if log.author.id == webhook.id:
+            await log.delete()
+            break
       path = "picture/hajime/*.jpg"
       num = glob.glob(path)
       await ctx.send(file=discord.File(random.choice(num)))
+
+   @commands.command("なおはじルーレット")
+   async def naohaji_roulette(self, ctx):
+      with open('text/newcard.csv')as f:
+         reader = [row for row in csv.reader(f)]
+         nao_cards = [row for row in reader if '神谷奈緒' in row]
+         hajime_cards = [row for row in reader if '藤原肇' in row]
+         nao_card = random.choice(nao_cards)
+         hajime_card = random.choice(hajime_cards)
+      webhook = await self.get_webhook(ctx)
+      webhook_c = Webhook_Control()
+      urls = ['https://cdn.discordapp.com/attachments/658856327019495475/823585001908076614/nao.gif',
+              'https://cdn.discordapp.com/attachments/658856327019495475/823582685485465600/hajime.gif']
+      webhook_c.image_add(urls)
+      webhook_c.add_title(title='なおはじルーレット')
+      webhook_c.webhook_send(webhook.url)
+      await asyncio.sleep(3)
+      async for log in ctx.channel.history(limit=10):
+         if log.author.id == webhook.id:
+            await log.delete()
+            break
+      webhook_c = Webhook_Control()
+      urls = [f'https://pink-check.school/image/withoutsign/{nao_card[1]}', f'https://pink-check.school/image/withoutsign/{hajime_card[1]}']
+      webhook_c.image_add(urls)
+      webhook_c.add_title(title='なおはじルーレット')
+      webhook_c.add_field(name=nao_card[3].split(']')[0] + ']', value=nao_card[3].split(']')[1])
+      webhook_c.add_field(name=hajime_card[3].split(']')[0] + ']', value=hajime_card[3].split(']')[1])
+      webhook_c.webhook_send(webhook.url)
 
    async def get_webhook(self, ctx):
       while True:
