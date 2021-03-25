@@ -1,4 +1,5 @@
 # Cyber_Naochang2
+![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/logo.png)
 
 神谷奈緒Discordサーバー【Frontier of the MAYUGE】で稼働しているBot「電脳ナオちゃん」です。
 
