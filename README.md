@@ -65,3 +65,13 @@
 | ------------- | ------------- |
 | `ping` | 応答時間を確認します |
 | `goodbye` | bot停止コマンドです |
+
+### 画像系
+* 画像処理のコマンドは以下の例のようにして入力してください
+
+![コマンド例](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/screen_shot1.gif)
+
+| コマンド | 説明 |
+| ------------- | ------------- |
+| `ping` | 応答時間を確認します |
+| `goodbye` | bot停止コマンドです |
