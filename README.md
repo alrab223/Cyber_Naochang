@@ -1,12 +1,13 @@
-# Cyber_Naochang2
+![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/rumor.png)
+***
 ![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/logo.png)
 
 神谷奈緒Discordサーバー【Frontier of the MAYUGE】で稼働しているBot「電脳ナオちゃん」です。
 
 ここではbotの説明を記します。
 
-## コマンド一覧
-### 目次
+# コマンド一覧
+## 目次
 * [ユーティリティ](#ユーティリティ)
 
 * [ゲームコマンド](#ゲームコマンド)
@@ -19,7 +20,9 @@
 
 * [画像系](#画像系)
 
-### 注意事項
+* [音声系](#音声系)
+
+## 注意事項
 * コマンドの先頭に`!`を付けてください
 
 * コマンドの引数間は全て半角スペースです
@@ -87,3 +90,12 @@
 | `gaming` | 画像をゲーミングにします |
 | `elon` | イーロンマスクのアレ |
 | `onesin` | おねシンのタイトル |
+| `切り抜き` | 画像の透過処理を行います。remove.bgのAPIを使用 |
+
+### 音声系
+
+* 工事中
+
+## 補足
+### 予約投稿について
+
