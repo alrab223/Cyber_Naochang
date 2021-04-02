@@ -1,13 +1,12 @@
-![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/logo.png)
+![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/nao22.gif)
 
 神谷奈緒Discordサーバー【Frontier of the MAYUGE】で稼働しているBot「電脳ナオちゃん」です。
 
-ここではbotの説明を記します。
 
 # About
 <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/rumor.png" width="500px">
 
-***
+基本的な機能から、画像、音声など思いついた機能をどんどん放り込んだ闇鍋botです
 # コマンド一覧
 ## 目次
 * [ユーティリティ](#ユーティリティ)
