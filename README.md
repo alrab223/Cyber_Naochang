@@ -1,11 +1,13 @@
-![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/rumor.png)
-***
 ![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/logo.png)
 
 神谷奈緒Discordサーバー【Frontier of the MAYUGE】で稼働しているBot「電脳ナオちゃん」です。
 
 ここではbotの説明を記します。
 
+# About
+<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/rumor.png" width="500px">
+
+***
 # コマンド一覧
 ## 目次
 * [ユーティリティ](#ユーティリティ)
@@ -34,7 +36,7 @@
 | コマンド | 説明 |
 | ------------- | ------------- |
 | `vc通知 [人数]` (DM Only) | ボイチャに指定した人数以上が参加した時に通知します |
-| `予約投稿 [投稿時刻] [投稿チャンネルid]` (DM Only) | 指定時刻に自動投稿を行います。詳細は[こちら](#予約投稿) |
+| `予約投稿 [投稿時刻] [投稿チャンネルid]` (DM Only) | 指定時刻に自動投稿を行います。詳細は[こちら](#予約投稿について) |
 | `status` | 様々なユーザーデータを表示します |
 | `server_status` | サーバーの状態を確認します |
 
@@ -98,4 +100,10 @@
 
 ## 補足
 ### 予約投稿について
+予約投稿はbotのDMを介して行います。
 
+```!予約投稿 y/m/d-H:M チャンネルID```  
+というようにコマンドを送信します。
+コマンド送信後は、投稿したいメッセージを書き込んでください。
+
+![コマンド例](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/naosuki.gif)
