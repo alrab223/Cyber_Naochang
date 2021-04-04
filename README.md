@@ -115,3 +115,7 @@
 
 分の指定の際に、一桁の場合0を付けてください  
 逆に日付の指定の際は一桁でも0は必要ありません
+
+また、取り消しの際はdelコマンドを使用します。
+
+![コマンド例](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/delete.png)
