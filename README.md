@@ -30,7 +30,7 @@
 
 * 短時間でコマンド連打するのはいかんぜよ
 
-<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/dame.png" width="500px">
+<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/dame.png" width="300px" height="300px">
 
 ***
 ### ユーティリティ
