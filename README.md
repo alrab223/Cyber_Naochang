@@ -28,7 +28,7 @@
 
 * コマンドの引数間は全て半角スペースです
 
-* 短時間でコマンド連打するのはいかんぜよ
+* 短時間でコマンド連打するのは
 
 <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/dame.png" width="300px" height="300px">
 
