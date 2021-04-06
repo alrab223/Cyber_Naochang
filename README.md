@@ -98,7 +98,6 @@
 | コマンド | 説明 | 
 | ------------- | ------------- |
 | `デレステコラ` | デレステのタイトルロゴをかぶせます |
-| `ミリシタコラ` | ミリシタのタイトルロゴをかぶせます |
 | `nhk` | nhkのアレをかぶせます |
 | `gaming` | 画像をゲーミングにします |
 | `elon` | イーロンマスクのアレ |
@@ -149,3 +148,6 @@ botではこの仕様をもとに、Webhookを利用してTwitterのURLに見せ
 |---|---|
 |![](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-pc.png)|![](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-smart.jpg)|
 
+## その他
+
+ここには載せていませんが、リアルタイムツイート垂れ流し、読み上げ機能などを実装しています
