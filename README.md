@@ -6,10 +6,10 @@
 # About
 <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/rumor.png" width="500px">
 
-基本的な機能から、画像、音声など思いついた機能をどんどん放り込んだ闇鍋botです
+基本的な機能から、画像、音声など闇鍋botです
 
 ## 目次
-### [コマンド一覧](#コマンド一覧)
+### コマンド一覧
 * [ユーティリティ](#ユーティリティ)
 
 * [ゲームコマンド](#ゲームコマンド)
@@ -24,10 +24,12 @@
 
 * [音声系](#音声系)
 
-### [補足](補足)
-* [予約投稿について](#画像系)
+### 補足
+* [予約投稿について](#予約投稿について)
 
-* [絵文字機能について](#音声系)
+* [絵文字機能について](#絵文字機能について)
+
+* [Webhookについて](#Webhookについて)
 
 ## 注意事項
 * コマンドの先頭に`!`を付けてください
@@ -136,3 +138,11 @@
 
 b(big)コマンドは、カスタム絵文字  
 u(unicode)コマンドは通常絵文字をデカくします
+
+## Webhookについて
+
+Discordは画像をまとめて表示させることはできませんが、例外としてTwitterのリンクを張った時のみ添付画像を４枚までまとめて表示することができます。
+
+botではこの仕様をもとに、Webhookを利用してTwitterのURLに見せかけて、画像をまとめて表示しているものがありますが、スマートフォンからの表示では１枚しか表示されないようになっています。ご了承くださいませ
+
+<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-pc.png"> <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook.smart.png">
