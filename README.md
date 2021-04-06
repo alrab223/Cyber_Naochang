@@ -28,6 +28,8 @@
 
 * コマンドの引数間は全て半角スペースです
 
+* コマンドは予告無しに増えたり減ったりします
+
 * 短時間でコマンド連打するのは
 
 <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/dame.png" width="300px" height="300px">
@@ -100,7 +102,7 @@
 * 工事中
 
 # 補足
-### 予約投稿について
+## 予約投稿について
 予約投稿はbotのDMを介して行います。
 
 ```!予約投稿 y/m/d-H:M チャンネルID```  
@@ -119,3 +121,12 @@
 また、取り消しの際はdelコマンドを使用します。
 
 ![コマンド例](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/delete.png)
+
+## 絵文字機能について
+
+絵文字の連結は以下スクリーンショットを参考にしてください
+
+![コマンド例](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/emoji.gif)
+
+b(big)コマンドは、カスタム絵文字  
+u(unicode)コマンドは通常絵文字をデカくします
