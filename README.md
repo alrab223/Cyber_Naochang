@@ -145,4 +145,4 @@ Discordは画像をまとめて表示させることはできませんが、例�
 
 botではこの仕様をもとに、Webhookを利用してTwitterのURLに見せかけて、画像をまとめて表示しているものがありますが、スマートフォンからの表示では１枚しか表示されないようになっています。ご了承くださいませ
 
-<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-pc.png"> <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook.smart.png">
+<img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-pc.png"> <img src="https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/webhook-smart.png">
