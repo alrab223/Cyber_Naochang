@@ -1,6 +1,4 @@
-# 現在Webhookを利用した機能が使用できません  
-修正中です。
-
+# 現在Webhookを利用した機能が使用できません
   
 ![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/nao22.gif)
 
