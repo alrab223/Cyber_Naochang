@@ -1,3 +1,5 @@
+<h1><span style="color: red; ">現在Webhookを利用した機能が使用できません</span></h1>
+  
 ![ロゴ](https://github.com/allbear/Cyber_Naochang2/blob/read_images/images/nao22.gif)
 
 神谷奈緒Discordサーバー【Frontier of the MAYUGE】で稼働しているBot「電脳ナオちゃん」です。
