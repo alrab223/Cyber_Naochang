@@ -94,3 +94,13 @@ class DbModule:
       except BaseException:
          cnx.rollback()
          raise
+
+   # def update2(self, table: str, columns: list, values: list, where: dict):
+   #    cnx = self.__db_connect()
+   #    cur = cnx.cursor()
+   #    try:
+   #       cur.execute(sql)
+   #       cnx.commit()
+   #    except BaseException:
+   #       cnx.rollback()
+   #       raise

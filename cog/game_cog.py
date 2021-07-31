@@ -96,7 +96,7 @@ class Game(commands.Cog):
          return gif, msg
 
    async def slot_flag(self, ctx, debug):
-      if ctx.channel.id != int(os.environ.get("exp")) and debug is False:
+      if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug is False:
          return False
       if self.slot is True:
          return False

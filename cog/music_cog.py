@@ -7,20 +7,11 @@ import discord
 from discord.ext import commands  # Bot Commands Frameworkのインポート
 from gtts import gTTS
 
-
-class MusicBot():
-
-   def playlist_print(self, dic, id):
-      count = 1
-      queue_list = ""
-      for name in dic[str(id)]["playlist"]:
-         queue_list += f"{count}, {name}" + "\n" + "\n"
-         count += 1
-      return queue_list
+from cog.utils.DbModule import DbModule as db
 
 
 # コグとして用いるクラスを定義。
-class Music(commands.Cog, MusicBot):
+class Music(commands.Cog):
 
    def __init__(self, bot):
       self.bot = bot
@@ -29,6 +20,15 @@ class Music(commands.Cog, MusicBot):
       self.music_queue = []
       self.read = False
       self.read_count = 0
+      self.db = db()
+
+   def playlist_print(self, dic, id):
+      count = 1
+      queue_list = ""
+      for name in dic[str(id)]["playlist"]:
+         queue_list += f"{count}, {name}" + "\n" + "\n"
+         count += 1
+      return queue_list
 
    @commands.command("カモン")
    async def voice_connect(self, ctx):
@@ -221,8 +221,10 @@ class Music(commands.Cog, MusicBot):
       if member.bot:
          return
 
-      if after.channel is None and len(before.channel.members) == 1:
+      if after.channel is None and len(before.channel.members) == 1:  # 誰もいなくなったらリセット
          self.db.update('update vc_notification set reset=0')
+         return
+
       try:
          sql = self.db.select('select *from vc_notification where vc_notification=1')
          id_list = [x for x in sql]
@@ -232,6 +234,7 @@ class Music(commands.Cog, MusicBot):
                await dm_channel.send(f"{after.channel.name}に{len(after.channel.members)}以上います")
                self.db.update(f'update vc_notification set reset=1 where id={i["id"]}')
       except AttributeError:
+         print('エラー発生')
          pass
 
       if before.channel is None and self.voich is not None:

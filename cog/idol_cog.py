@@ -84,7 +84,7 @@ class Idol(commands.Cog):
          if log.author.id == webhook.id:
             await log.delete()
             break
-      path = "picture/hajime/*.jpg"
+      path = "picture/nao/*.jpg"
       num = glob.glob(path)
       await ctx.send(file=discord.File(random.choice(num)))
 
@@ -127,7 +127,9 @@ class Idol(commands.Cog):
             await log.delete()
             break
       webhook_c = Webhook_Control()
-      urls = [f'https://pink-check.school/image/withoutsign/{nao_card[1]}', f'https://pink-check.school/image/withoutsign/{hajime_card[1]}']
+      urls = [
+          f'https://pink-check.school/image/withoutsign/{nao_card[1]}',
+          f'https://pink-check.school/image/withoutsign/{hajime_card[1]}']
       webhook_c.image_add(urls)
       webhook_c.add_title(title='なおはじルーレット')
       webhook_c.add_field(name=nao_card[3].split(']')[0] + ']', value=nao_card[3].split(']')[1])
@@ -206,30 +208,21 @@ class Idol(commands.Cog):
 
    @commands.command("納税")
    async def tax(self, ctx):
-      webhook_c = Webhook_Control()
-      webhook = await webhook_c.get_webhook(ctx)
-      webhook_url = webhook.url
-      urls = []
-      with open('json/idol_data.json', 'r')as f:
-         idol_data = json.load(f)
-      num = random.randint(1, 100)
-      if num < 4:
-         ssr = [x for x in idol_data['result']
-                if x['rarity_dep']['rarity'] == 5]
-      elif num > 3 and num < 16:
-         ssr = [x for x in idol_data['result']
-                if x['rarity_dep']['rarity'] == 4]
-      else:
-         ssr = [x for x in idol_data['result']
-                if x['rarity_dep']['rarity'] == 3]
-      idol = random.choice(ssr)
+      url = "https://starlight.kirara.ca/api/v1/list/card_t"
+      idols_data = requests.get(url).json()
+      idols = [x for x in idols_data['result']]
+      idol = random.choice(idols)
       url = f'https://starlight.kirara.ca/api/v1/card_t/{idol["id"]}'
-      r = requests.get(url)
-      urls.append(r.json()['result'][0]['card_image_ref'])
+      idol = requests.get(url).json()
+      embed = discord.Embed(title=f"{idol['result'][0]['name']}")
+      embed.set_image(url=idol['result'][0]['card_image_ref'])
+      embed.add_field(name="Vo", value=f"{idol['result'][0]['vocal_max']}")
+      embed.add_field(name="Da", value=f"{idol['result'][0]['dance_max']}")
+      embed.add_field(name="Vi", value=f"{idol['result'][0]['visual_max']}")
+      embed.add_field(name=f"センター効果「{idol['result'][0]['lead_skill']['name']}」", value=f"{idol['result'][0]['lead_skill']['explain']}",inline=False)
+      embed.add_field(name=f"特技「{idol['result'][0]['skill']['skill_name']}」", value=f"{idol['result'][0]['skill']['explain']}")
+      await ctx.send(embed=embed)
 
-      webhook_c.image_add(urls)
-      webhook_c.add_title(title=r.json()['result'][0]['name'])
-      webhook_c.webhook_send(webhook_url)
 
    @commands.command("カード検索")
    async def cards(self, ctx, name: str):

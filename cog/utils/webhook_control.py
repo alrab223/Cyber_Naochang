@@ -35,4 +35,4 @@ class Webhook_Control:
       self.params['embeds'][0]['fields'].append(field)
 
    def webhook_send(self, url):
-      requests.post(url, json.dumps(self.params), headers={'Content-Type': 'application/json'})
+      req=requests.post(url, json.dumps(self.params), headers={'Content-Type': 'application/json'})
