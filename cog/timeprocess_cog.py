@@ -27,8 +27,6 @@ class Time(commands.Cog, Webhook_Control):
       self.weather_list = []
       self.event = False  # 特殊イベントの時のみTrue
       self.db = db()
-      with open("text/idol.txt", "r") as f:
-         self.idol_command = f.read().replace("\n", "")
 
    def weather_get(self):
       self.weather_list = []
@@ -75,7 +73,7 @@ class Time(commands.Cog, Webhook_Control):
    @commands.command("天気取得")
    async def test_reset(self, ctx):
       self.weather_get()
-   
+
    async def get_webhook(self, channel):
       while True:
          ch_webhooks = await channel.webhooks()
@@ -84,7 +82,7 @@ class Time(commands.Cog, Webhook_Control):
             await channel.create_webhook(name="naochang")
          else:
             return webhook
-   
+
    @commands.command("b4")
    async def stamp66(self, ctx, *emojis: discord.Emoji):
       url = 'https://discord.com/'
@@ -94,52 +92,6 @@ class Time(commands.Cog, Webhook_Control):
       wh = discord.utils.get(await ctx.channel.webhooks(), name='久川颯')
       await ctx.message.delete()
       await wh.send(embeds=embeds, username=ctx.author.display_name, avatar_url=ctx.message.author.avatar_url_as(format="png"))
-
-   async def idol_print(self, channel):
-      webhook = await self.get_webhook(channel)
-      webhook_url = webhook.url
-      webhook_c = Webhook_Control()
-      urls = []
-      idol = self.db.select(f'select *from idol_data where name="{self.idol_command}"')[0]
-      tall = idol['height']
-      webhook_c.add_field(name="属性", value=f"{idol['element']}", inline=False)
-      webhook_c.add_field(name="年齢", value=f"{idol['age']}")
-      webhook_c.add_field(name="身長", value=f"{tall}cm")
-      webhook_c.add_field(name="誕生日", value=f"{idol['birthday']}")
-      webhook_c.add_field(name="出身地", value=f"{idol['birthplace']}")
-      webhook_c.add_field(name="血液型", value=f"{idol['blood_type']}")
-      webhook_c.add_field(name="利き手", value=f"{idol['hand']}")
-      webhook_c.add_field(name="趣味", value=f"{idol['hobby']}")
-      webhook_c.add_field(name="奈緒との身長差", value=f"{tall-154}cm")
-      with open('json/idol_data.json', 'r')as f:
-         idol_data = json.load(f)
-      idols = [x for x in idol_data['result'] if x['name_only'] == self.idol_command]
-      ids = [x['id'] for x in idols]
-      ids += [x['id'] + 1 for x in idols]
-      ids = random.sample(ids, 4)
-      for id in ids:
-         url = f'https://starlight.kirara.ca/api/v1/card_t/{id}'
-         r = requests.get(url)
-         urls.append(r.json()['result'][0]['spread_image_ref'])
-
-      webhook_c.image_add(urls)
-      webhook_c.add_title(title=self.idol_command)
-      webhook_c.webhook_send(webhook_url)
-      self.db.update(f'update idol_data set done=1 where name="{idol["name"]}"')
-      with open("text/idol.txt", "w") as f:
-         f.write("noncommand_commands")
-      self.idol_command = "noncommand_commands"
-
-   @commands.command("今日のアイドル")
-   async def today_idol(self, ctx, name: str):
-      if name == self.idol_command:
-         await ctx.send("正解！まゆげコインゲット！")
-         await self.idol_print(ctx.channel)
-         self.db.update(f'update user_data set mayuge_coin=mayuge_coin+10 where id={ctx.author.id}')
-      elif self.idol_command == "noncommand_commands":
-         pass
-      else:
-         await ctx.send("残念！")
 
    @tasks.loop(seconds=5.0)
    async def bd_printer2(self):
