@@ -6,6 +6,11 @@ import random
 
 import discord
 from discord.ext import commands
+from discord_components import (Button, ButtonStyle, DiscordComponents, Select,
+                                SelectOption)
+from PIL import Image
+
+from cog.utils import picture_download as pd
 from cog.utils.DbModule import DbModule as db
 from cog.utils.webhook_control import Webhook_Control
 
@@ -18,6 +23,7 @@ class Game(commands.Cog):
       self.slot = False
       self.chance = False
       self.db = db()
+      DiscordComponents(self.bot)
 
    def get_emoji(self):
       with open("json/emoji.json", "r")as f:
@@ -96,8 +102,8 @@ class Game(commands.Cog):
          return gif, msg
 
    async def slot_flag(self, ctx, debug):
-      if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug is False:
-         return False
+      # if ctx.channel.id != int(os.environ.get("naosuki_ch")) and debug is False:
+      #    return False
       if self.slot is True:
          return False
       self.slot = True
@@ -312,6 +318,181 @@ class Game(commands.Cog):
       await log.delete()
       self.slot = False
 
+   async def nao_slot(self, ctx, debug=False, interaction=None):
+      """スロットで遊びます"""
+      coin = await self.slot_setup(ctx, "NAO_CHALLENGE", debug)
+      if not coin:
+         self.slot = False
+         return
+      log = await ctx.send(f"{interaction.author.mention}残り{coin}まゆげコイン")
+
+      with open("json/emoji.json", "r") as f:
+         emdic = json.load(f)
+      emoji = ""
+      judge = []
+      ei = emdic["kamiyanao"]
+      path = "picture/gif2/*.gif"
+      num = glob.glob(path)
+      gif, msg = await self.slot_maker(ctx, num, "kamiyanao_slot", 5)
+      emoji = ""
+      for i in range(5):
+         ran = random.choice(ei)
+         judge.append(ran)
+         emoji += str(self.bot.get_emoji(ran))
+         await asyncio.sleep(0.1)
+         await msg.edit(content=emoji)
+      answer = await self.bonus_slot(ctx, ei, judge, msg, "kamiyanao_slot", 5, debug)
+      if answer and answer is True:
+         msg = answer
+      if ei == judge or answer:
+         emoji = emdic["nao_gif"]
+         emoji += emdic["kamiyanao"]
+         emoji += emdic["naosuki"]
+         for i in emoji:
+            ej = str(self.bot.get_emoji(i))
+            try:
+               await msg.add_reaction(ej)
+            except AttributeError:
+               pass
+         await ctx.send(f"{interaction.author.mention}チャレンジ成功！！")
+      await gif.delete()
+      await log.delete()
+      self.slot = False
+
+   def paste(self, img_list):
+      img_width = 0
+      dst = Image.new('RGBA', (120 * len(img_list), 120))
+      for img in img_list:
+
+         img = img.resize((120, 120))
+         dst.paste(img, (img_width, 0))
+         img_width += img.width
+      return dst
+
+   async def chiba_slot(self, channel, debug=False, interaction=None):
+      """スロットで遊びます"""
+      with open("json/emoji.json", "r") as f:
+         emdic = json.load(f)
+      emoji = ""
+      judge = []
+      ei = emdic["makuhari"]
+      path = "picture/gif/chiba.gif"
+      emoji = ""
+      for i in range(4):
+         emoji += str(self.bot.get_emoji(913838697730940978))
+      msg = await channel.send(emoji)
+      gif = await channel.send(file=discord.File(path))
+      await asyncio.sleep(3)
+      emoji = ""
+      for i in range(4):
+         ran = random.choice(ei)
+         judge.append(ran)
+         emoji += str(self.bot.get_emoji(ran))
+         await asyncio.sleep(0.1)
+         await msg.edit(content=emoji)
+      if debug is True:
+         ei = judge
+      if ei == judge:
+         emoji = emdic["nao_gif"]
+         emoji += emdic["kamiyanao"]
+         emoji += emdic["naosuki"]
+         for i in emoji:
+            ej = str(self.bot.get_emoji(i))
+            try:
+               await msg.add_reaction(ej)
+            except AttributeError:
+               pass
+         await channel.send(f"{interaction.author.mention}まくはり～")
+      await gif.delete()
+      self.slot = False
+   
+   async def chiba_slot2(self, channel, debug=False, interaction=None):
+      """スロットで遊びます"""
+      with open("json/emoji.json", "r") as f:
+         emdic = json.load(f)
+      emoji = ""
+      judge = []
+      ei = emdic["makuhari"]
+      path = "picture/gif/chiba.gif"
+      emoji = ""
+      for i in range(4):
+         emoji += str(self.bot.get_emoji(913838697730940978))
+      msg = await channel.send(emoji)
+      gif = await channel.send(file=discord.File(path))
+      await asyncio.sleep(3)
+      emoji = ""
+      for i in range(4):
+         ran = random.choice(ei)
+         judge.append(ran)
+      for i, emoji in enumerate(judge):
+         emo = self.bot.get_emoji(emoji)
+         print(emo.url)
+         pd.download_img(emo.url, f"picture/emojis/emoji{i}.png")
+      png_name = sorted(glob.glob('picture/emojis/*png'))
+      im_list = []
+      for file_name in png_name:
+         Image_tmp = Image.open(file_name)
+         im_list.append(Image_tmp)
+      self.paste(im_list).save("picture/emojis/union_emoji.png")
+      await channel.send(file=discord.File("picture/emojis/union_emoji.png"))
+      for i in sorted(glob.glob('picture/emojis/*png')):
+         os.remove(i)
+      await msg.delete()
+      if debug is True:
+         ei = judge
+      if ei == judge:
+         emoji = emdic["nao_gif"]
+         emoji += emdic["kamiyanao"]
+         emoji += emdic["naosuki"]
+         for i in emoji:
+            ej = str(self.bot.get_emoji(i))
+            try:
+               await msg.add_reaction(ej)
+            except AttributeError:
+               pass
+         await channel.send(f"{interaction.author.mention}まくはり～")
+      await gif.delete()
+      self.slot = False
+
+   @commands.command("スロットボタン")
+   async def slot_button(self, ctx, ch_id: int = None):
+      if ch_id is None:
+         channel = ctx.channel
+      else:
+         channel = self.bot.get_channel(ch_id)
+      await channel.send(
+          "幕張は出るか",
+          components=[
+              [Button(style=ButtonStyle.blue, label="ちば")],
+          ],
+      )
+      await ctx.message.delete()
+      while True:
+         interaction = await self.bot.wait_for("button_click")
+         if interaction.component.label == "ちば":
+            msg = await interaction.respond(content="まくはり～", ephemeral=True)
+            await self.nao_slot(ctx, False, interaction)
+            await msg.delete()
+
+   @commands.command("ちばボタン")
+   async def chiba_button(self, ctx, ch_id: int = None):
+      if ch_id is None:
+         channel = ctx.channel
+      else:
+         channel = self.bot.get_channel(ch_id)
+      await channel.send(
+          "幕張は出るか。ボタンが見えなくなったら「!ちばボタン」で呼び出し",
+          components=[
+              [Button(style=ButtonStyle.green, label="ちば")],
+          ],
+      )
+      await ctx.message.delete()
+      while True:
+         interaction = await self.bot.wait_for("button_click")
+         if interaction.component.label == "ちば":
+            await interaction.respond(content=f"{interaction.author.display_name}が押しました。まくはりチャレンジ", ephemeral=False)
+            await self.chiba_slot2(channel, False, interaction)
+   
    @commands.command("連続神谷奈緒チャレンジ")
    async def con_hours24_slot(self, ctx):
       """スロットで遊びます"""
