@@ -166,6 +166,11 @@ class Time(commands.Cog, Webhook_Control):
    async def before_printer(self):
       print('waiting...')
       await self.bot.wait_until_ready()
+      url = "https://starlight.kirara.ca/api/v1/list/card_t"
+      r = requests.get(url).json()
+      with open("json/idol_data.json", "w")as f:
+         json.dump(r, f, indent=3)
+      print('データベースを更新しました')
 
    @tasks.loop(seconds=6.0)
    async def printer3(self):
@@ -237,8 +242,7 @@ class Time(commands.Cog, Webhook_Control):
       channel = self.bot.get_channel(int(os.environ.get("naosuki_ch")))
       self.db.update('update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
       self.weather_get()
-      await channel.send("```!なおはじルーレット```")
-      await channel.send("```!ガシャ```")
+      await channel.send("あけおめ")
 
 
 def setup(bot):
