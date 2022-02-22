@@ -47,29 +47,6 @@ class Time(commands.Cog, Webhook_Control):
          except AttributeError:
             pass
 
-   async def daily_idol(self, channel):
-      idol = self.db.select('select *from idol_data where done!=1')
-      idol = random.choice(idol)
-      with open("text/idol.txt", "w") as f:
-         f.write(idol['name'])
-      num = random.randint(1, 5)
-      await channel.send("今日のアイドルは誰")
-      if idol['name'] == "神谷奈緒":
-         await channel.send(f"誕生日が{idol['birthday']}、千葉が産んだ\nまゆげ！もふもふ！のアイドルは...")
-      if num == 1:
-         await channel.send(f"誕生日が{idol['birthday']}、趣味が「{idol['hobby']}」のアイドルは...")
-      elif num == 2:
-         await channel.send(f"誕生日が{idol['birthday']}、属性{idol['element']}、{idol['birthplace']}出身のアイドルは...")
-      elif num == 3:
-         await channel.send(f"誕生日が{idol['birthday']}、{idol['age']}歳、{idol['birthplace']}出身のアイドルは...")
-      elif num == 4:
-         await channel.send(f"誕生日が{idol['birthday']}、{idol['blood_type']}型、{idol['birthplace']}出身のアイドルは...")
-      else:
-         await channel.send(f"趣味が「{idol['hobby']}」のアイドルは...")
-      await channel.send("```!今日のアイドル アイドル名```")
-
-      self.idol_command = idol['name']
-
    @commands.command("天気取得")
    async def test_reset(self, ctx):
       self.weather_get()
@@ -189,13 +166,6 @@ class Time(commands.Cog, Webhook_Control):
                                username=user.name,
                                avatar_url=user.avatar_url_as(format="png"))
             self.db.update(f"delete from future_send where time='{message['time']}' and id={message['id']}")
-
-   async def special_daily(self):
-      channel = self.bot.get_channel(int(os.environ.get("naosuki_ch")))
-      self.db.update('update user_data set mayuge_coin=mayuge_coin+3,naosuki=0')
-      self.weather_get()
-      await channel.send("あけおめ")
-
 
 def setup(bot):
    bot.add_cog(Time(bot))
