@@ -8,3 +8,4 @@ cog/debug_cog.py
 debug.py
 settings.json
 test
+cog/test_cog.py
